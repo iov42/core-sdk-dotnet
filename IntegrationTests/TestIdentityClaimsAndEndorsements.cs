@@ -175,7 +175,7 @@ namespace IntegrationTests
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody();
             var header = test.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, header);
+            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, body, header);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.RequestId));
@@ -199,7 +199,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateIdentityEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.RequestId));
@@ -223,7 +223,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateIdentityEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var endorse = await test.Client.GetIdentityEndorsement(test.Identity.Id, birthdayClaim, hsbc.Identity.Id);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -247,7 +247,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateIdentityEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var retrievedClaim = await test.Client.GetIdentityClaim(birthdayClaim);
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);

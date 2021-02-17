@@ -134,7 +134,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetEndorsementBody(horseId);
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateAssetClaimsEndorsements(horseId, endorsements, testHeader, hsbcHeader);
+            var endorse = await test.Client.CreateAssetClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.RequestId));
@@ -162,7 +162,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetEndorsementBody(horseId);
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetClaimsEndorsements(horseId, endorsements, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var endorse = await test.Client.GetAssetEndorsement(horseId, trevorId, locationClaim, hsbc.Identity.Id);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -190,7 +190,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetEndorsementBody(horseId);
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetClaimsEndorsements(horseId, endorsements, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var retrievedClaim = await test.Client.GetAssetClaim(horseId, trevorId, locationClaim);
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);

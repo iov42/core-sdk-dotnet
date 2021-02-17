@@ -257,9 +257,10 @@ namespace Iov42sdk.Connection
         /// Endorses claims on an identity
         /// </summary>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="endorsementBody">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, params Authorisation[] authorisations);
+        Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, EndorsementBody endorsementBody, params Authorisation[] authorisations);
 
         /// <summary>
         /// Create the claims on the asset type
@@ -290,9 +291,10 @@ namespace Iov42sdk.Connection
         /// Endorses claims on an asset type
         /// </summary>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="body">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, params Authorisation[] authorisations);
+        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations);
 
         /// <summary>
         /// Get the specific endorsement against the specific claim for an asset type, if it exists
@@ -334,11 +336,11 @@ namespace Iov42sdk.Connection
         /// <summary>
         /// Endorses claims on an asset
         /// </summary>
-        /// <param name="assetTypeId">The asset type of the endorsement subject</param>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="body">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(string assetTypeId, Endorsements endorsements, params Authorisation[] authorisations);
+        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations);
 
         /// <summary>
         /// Get the specific endorsement against the specific claim for an asset, if it exists

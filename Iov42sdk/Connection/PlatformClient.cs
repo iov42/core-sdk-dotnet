@@ -242,9 +242,9 @@ namespace Iov42sdk.Connection
             return CreateEndorsements(subjectTypeId, subject);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, params Authorisation[] authorisations)
+        public async Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, endorsements.GenerateIdentityEndorsementBody, authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetIdentityEndorsement(string identity, string claim, string endorser)
@@ -272,9 +272,9 @@ namespace Iov42sdk.Connection
             return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, params Authorisation[] authorisations)
+        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, endorsements.GenerateAssetTypeEndorsementBody, authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetAssetTypeEndorsement(string assetTypeId, string claim, string endorser)
@@ -302,9 +302,9 @@ namespace Iov42sdk.Connection
             return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(string assetTypeId, Endorsements endorsements, params Authorisation[] authorisations)
+        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, () => endorsements.GenerateAssetEndorsementBody(assetTypeId), authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetAssetEndorsement(string assetTypeId, string assetId, string claim, string endorser)

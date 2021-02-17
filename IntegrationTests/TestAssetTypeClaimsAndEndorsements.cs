@@ -123,7 +123,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetTypeEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var endorse = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.RequestId));
@@ -149,7 +149,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetTypeEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var endorse = await test.Client.GetAssetTypeEndorsement(horseId, locationClaim, hsbc.Identity.Id);
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -175,7 +175,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetTypeEndorsementBody();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
             var retrievedClaim = await test.Client.GetAssetTypeClaim(horseId, locationClaim);
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);

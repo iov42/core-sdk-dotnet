@@ -48,7 +48,7 @@ namespace IntegrationTests.UseCases
             var body = endorsements.GenerateAssetEndorsementBody(carType);
             var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
             var mvaAuthorisation = mvaClient.GenerateAuthorisation(body);
-            var endorsementResponse = await mvaClient.CreateAssetClaimsEndorsements(carType, endorsements, aliceAuthorisation, mvaAuthorisation);
+            var endorsementResponse = await mvaClient.CreateAssetClaimsEndorsements(endorsements, body, aliceAuthorisation, mvaAuthorisation);
             Assert.IsTrue(endorsementResponse.Success);
 
             // Allow eventual consistency to persist the data

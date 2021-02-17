@@ -209,12 +209,11 @@ namespace Iov42sdk.Support
             return headers;
         }
 
-        internal async Task<ResponseResult<CreateEndorsementsResult>> CreateClaimsEndorsements(Endorsements endorsements, Func<EndorsementBody> createBody,
+        internal async Task<ResponseResult<CreateEndorsementsResult>> CreateClaimsEndorsements(Endorsements endorsements, EndorsementBody body,
             params Authorisation[] authorisations)
         {
             var claimMap = endorsements.GetClaims();
             var claimsHeader = GenerateClaimsHeader(claimMap);
-            var body = createBody();
             return await ProcessSignedPutRequest<EndorsementBody, CreateEndorsementsResult>(_identity, authorisations, body, claimsHeader);
         }
 
