@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using IntegrationTests.Support;
 using Iov42sdk.Models.Transfers;
@@ -79,10 +80,16 @@ namespace IntegrationTests
             await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             var uniqueTransfer = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id);
             var quantityTransfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var transferRequest = new TransferRequest(quantityTransfer, uniqueTransfer)
-                .AddAuthorisation(_test.Client.GenerateAuthorisation)
-                .AddAuthorisation(bruceClient.Client.GenerateAuthorisation);
-            var response = await _test.Client.TransferAssets(transferRequest);
+            var testTransferRequest = new TransferRequest(quantityTransfer, uniqueTransfer)
+                .AddAuthorisation(_test.Client.GenerateAuthorisation);
+            var body = testTransferRequest.Body;
+            // Pass the body to Bruce to sign
+            var bruceAuthorisations = new TransferRequest(body)
+                .AddAuthorisation(bruceClient.Client.GenerateAuthorisation)
+                .Authorisations.ToArray();
+            // Bruce now returns his authotisations
+            testTransferRequest.AddAuthorisations(bruceAuthorisations);
+            var response = await _test.Client.TransferAssets(testTransferRequest);
             Assert.IsTrue(response.Success);
             Assert.IsNotNull(response.Value.RequestId);
             Assert.IsNotNull(response.Value.Proof);

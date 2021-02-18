@@ -177,9 +177,16 @@ It is also possible to do multiple transfers in a single call to the platform. I
 var uniqueTransfer = aliceClient.CreateOwnershipTransfer(trevorId, horseId, alice, client.Identity.Id);
 var quantityTransfer = client.CreateQuantityTransfer(account, aliceAccount, gbpId, 10);
 var transferRequest = new TransferRequest(quantityTransfer, uniqueTransfer)
-    .AddAuthorisation(client.GenerateAuthorisation)
-    .AddAuthorisation(aliceClient.Client.GenerateAuthorisation);
+    .AddAuthorisation(client.GenerateAuthorisation);
+var body = transferRequest.Body;
+// Pass the body to Alice to sign
+var aliceAuthorisations = new TransferRequest(body)
+    .AddAuthorisation(aliceClient.GenerateAuthorisation)
+    .Authorisations.ToArray();
+// Alice now returns her authotisations
+transferRequest.AddAuthorisations(aliceAuthorisations);
 var response = await client.TransferAssets(transferRequest);
+
 ```
 
 ### Claims
@@ -236,7 +243,7 @@ var body = endorsements.GenerateIdentityEndorsementBody();
 var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
 // This would now be done by the other identity
 var identityAuthorisation = hsbc.Client.GenerateAuthorisation(body);
-var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, aliceAuthorisation, identityAuthorisation);
+var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, body, aliceAuthorisation, identityAuthorisation);
 ```
 
 There are equivalent calls for creating endorsements on assets and asset types.
