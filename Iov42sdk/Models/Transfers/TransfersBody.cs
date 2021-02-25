@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.Transfers
 {
-    public class TransfersBody : PutBody
+    public class TransfersBody : WriteBody
     {
         public SingleTransfer[] Transfers { get; set; }
 
@@ -10,7 +10,7 @@
             Transfers = new SingleTransfer[0];
         }
 
-        public TransfersBody(SingleTransfer[] transfers)
+        public TransfersBody(params SingleTransfer[] transfers)
             : this()
         {
             Transfers = transfers;

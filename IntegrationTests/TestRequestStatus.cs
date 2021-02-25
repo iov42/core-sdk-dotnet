@@ -13,7 +13,9 @@ namespace IntegrationTests
             using var test = new IntegrationTestCreation();
             var newId = test.IdentityBuilder.Create();
             var issueIdentityResponse = await test.Client.CreateIdentity(newId);
+            
             var status = await test.Client.GetRequestStatus(issueIdentityResponse.Value.RequestId);
+
             Assert.IsTrue(status.Success);
             Assert.IsNotNull(status);
             Assert.AreEqual(issueIdentityResponse.Value.RequestId, status.Value.RequestId);

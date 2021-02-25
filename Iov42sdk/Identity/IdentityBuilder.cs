@@ -1,5 +1,6 @@
 ﻿using System;
 using Iov42sdk.Crypto;
+using Iov42sdk.Support;
 
 namespace Iov42sdk.Identity
 {
@@ -24,7 +25,7 @@ namespace Iov42sdk.Identity
         /// <returns></returns>
         public IdentityDetails Create(string id = null, IKeyPair keys = null)
         {
-            return new IdentityDetails(id ?? Guid.NewGuid().ToString(), _createCrypto(keys));
+            return new IdentityDetails(id ?? IovClient.CreateUniqueId(), _createCrypto(keys));
         }
     }
 }

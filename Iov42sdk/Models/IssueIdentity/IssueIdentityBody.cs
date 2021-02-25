@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.IssueIdentity
 {
-    public class IssueIdentityBody : PutBody
+    public class IssueIdentityBody : WriteBody
     {
         public IssueIdentityBody()
             : base(NodeConstants.IssueIdentityRequestType)

@@ -2,6 +2,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using IntegrationTests.Support;
+using Iov42sdk;
+using Iov42sdk.Models;
+using Iov42sdk.Models.CreateClaims;
+using Iov42sdk.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests
@@ -17,7 +21,9 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+            
             var response = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             Assert.IsNotNull(response);
             Assert.IsTrue(response.Success);
             Assert.IsFalse(string.IsNullOrEmpty(response.Value.RequestId));
@@ -34,8 +40,11 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+            
             var ___ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             var retrievedClaim = await test.Client.GetAssetTypeClaim(horseId, locationClaim);
+            
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);
             Assert.IsNull(retrievedClaim.Value.DelegateIdentityId);
@@ -52,8 +61,11 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+            
             var ___ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             var retrievedClaims = await test.Client.GetAssetTypeClaims(horseId);
+            
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
             Assert.IsNull(retrievedClaims.Value.Next);
@@ -81,8 +93,11 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+
             var ___ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             var retrievedClaims = await test.Client.GetAssetTypeClaims(horseId, 1);
+            
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
             Assert.IsNotNull(retrievedClaims.Value.Next);
@@ -103,7 +118,6 @@ namespace IntegrationTests
             Assert.IsFalse(string.IsNullOrEmpty(secondClaim.Proof));
             Assert.IsNotNull(secondClaim.Resource);
             Assert.IsNull(secondClaim.DelegateIdentityId);
-
             Assert.AreNotEqual(firstClaim.Claim, secondClaim.Claim);
         }
 
@@ -116,14 +130,17 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+
             var ____ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             var endorsements = hsbc.Client.CreateAssetTypeEndorsements(horseId)
                 .AddEndorsement(locationClaim)
                 .AddEndorsement(regulatoryClaim);
-            var body = endorsements.GenerateAssetTypeEndorsementBody();
+            var body = endorsements.GenerateAssetTypeEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
+            var endorse = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.RequestId));
@@ -142,15 +159,19 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+            
             var ____ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
             var endorsements = hsbc.Client.CreateAssetTypeEndorsements(horseId)
                 .AddEndorsement(locationClaim)
                 .AddEndorsement(regulatoryClaim);
-            var body = endorsements.GenerateAssetTypeEndorsementBody();
+            var body = endorsements.GenerateAssetTypeEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            
             var endorse = await test.Client.GetAssetTypeEndorsement(horseId, locationClaim, hsbc.Identity.Id);
+            
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.Proof));
@@ -168,15 +189,18 @@ namespace IntegrationTests
             var regulatoryClaim = Guid.NewGuid().ToString();
             var horseId = test.CreateUniqueId("horse");
             var _ = await test.Client.CreateUniqueAssetType(horseId);
+            
             var ____ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
             var endorsements = hsbc.Client.CreateAssetTypeEndorsements(horseId)
                 .AddEndorsement(locationClaim)
                 .AddEndorsement(regulatoryClaim);
-            var body = endorsements.GenerateAssetTypeEndorsementBody();
+            var body = endorsements.GenerateAssetTypeEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, body, testHeader, hsbcHeader);
+            var ______ = await test.Client.CreateAssetTypeClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            
             var retrievedClaim = await test.Client.GetAssetTypeClaim(horseId, locationClaim);
+            
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);
             Assert.IsNull(retrievedClaim.Value.DelegateIdentityId);
@@ -188,6 +212,49 @@ namespace IntegrationTests
             Assert.IsTrue(string.IsNullOrEmpty(endorsement.DelegateIdentityId));
             Assert.IsFalse(string.IsNullOrEmpty(endorsement.Endorsement));
             Assert.IsFalse(string.IsNullOrEmpty(endorsement.EndorserId));
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateAnAssetTypeClaimUsingRequest()
+        {
+            using var test = new IntegrationTestCreation();
+            var locationClaim = Guid.NewGuid().ToString();
+            var regulatoryClaim = Guid.NewGuid().ToString();
+            var horseId = test.CreateUniqueId("horse");
+            var _ = await test.Client.CreateUniqueAssetType(horseId);
+
+            var claims = new[] { locationClaim, regulatoryClaim };
+            var claimMap = claims.ToDictionary(x => test.Identity.Crypto.GetHash(x), x => x);
+            var headers = test.Client.GenerateClaimsHeader(claimMap);
+            var body = new CreateClaimsBody(NodeConstants.CreateAssetTypeClaimsRequestType, horseId, claimMap.Keys.ToArray());
+            var request = test.Client.BuildRequest(body).WithAdditionalHeaders(headers);
+            var response = await test.Client.Write(request);
+            response.VerifyWriteResult(2);
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateAnAssetTypeEndorsementUsingRequest()
+        {
+            using var test = new IntegrationTestCreation();
+            using var hsbc = new IntegrationTestCreation();
+            var locationClaim = Guid.NewGuid().ToString();
+            var regulatoryClaim = Guid.NewGuid().ToString();
+            var horseId = test.CreateUniqueId("horse");
+            var _ = await test.Client.CreateUniqueAssetType(horseId);
+
+            var ____ = await test.Client.CreateAssetTypeClaims(horseId, locationClaim, regulatoryClaim);
+            
+            var endorsements = hsbc.Client.CreateAssetTypeEndorsements(horseId)
+                .AddEndorsement(locationClaim)
+                .AddEndorsement(regulatoryClaim);
+            var body = endorsements.GenerateAssetTypeEndorsementBody().Serialize();
+            var testHeader = test.Client.GenerateAuthorisation(body);
+            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
+            var claimMap = endorsements.GetClaims();
+            var claimsHeader = test.Client.GenerateClaimsHeader(claimMap);
+            var request = new PlatformWriteRequest(endorsements.RequestId, body, new[] { testHeader, hsbcHeader }).WithAdditionalHeaders(claimsHeader);
+            var endorse = await test.Client.Write(request);
+            endorse.VerifyWriteResult(2);
         }
     }
 }

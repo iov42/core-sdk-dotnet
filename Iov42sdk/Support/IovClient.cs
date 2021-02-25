@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Iov42sdk.Identity;
 using Iov42sdk.Models;
 using Iov42sdk.Models.CreateClaims;
-using Iov42sdk.Models.CreateEndorsements;
 using Iov42sdk.Models.GetEndorsement;
 using Iov42sdk.Models.Headers;
 using Microsoft.AspNetCore.Http;
@@ -20,32 +19,26 @@ namespace Iov42sdk.Support
         private const string RetryAfter = "Retry-After";
         private const string JsonMediaType = "application/json";
 
-        private readonly Uri _baseAddress;
         private readonly JsonConversion _json;
         private IdentityDetails _identity;
-        private NodeInfo _nodeInfo;
-        private string _requestIdRoot;
         private readonly HttpClient _client;
         private string _delegatorId;
         private readonly EventualConsistency _eventualConsistency = new EventualConsistency();
 
-        public IovClient(string baseAddress)
+        public IovClient(Uri baseAddress)
         {
-            _baseAddress = new Uri(baseAddress);
             _json = new JsonConversion();
             var httpClientHandler = new HttpClientHandler
             {
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
             };
-            _client = new HttpClient(httpClientHandler) { BaseAddress = _baseAddress };
+            _client = new HttpClient(httpClientHandler) { BaseAddress = baseAddress };
         }
 
-        internal IovClient Init(IdentityDetails identity, NodeInfo nodeInfo, string requestIdRoot)
+        internal IovClient Init(IdentityDetails identity)
         {
             _identity = identity;
-            _nodeInfo = nodeInfo;
-            _requestIdRoot = requestIdRoot;
             return this;
         }
 
@@ -67,80 +60,58 @@ namespace Iov42sdk.Support
             return new ResponseResult<T>(converted, response.IsSuccessStatusCode, response.StatusCode, response.ReasonPhrase);
         }
 
-        internal async Task<ResponseResult<TR>> ProcessSignedPutRequest<TB, TR>(TB body, Dictionary<string, string> additionalHeaders = null)
-            where TB : PutBody
+        internal async Task<ResponseResult<WriteResult>> ProcessSignedPutRequest(PlatformWriteRequest platformWriteRequest)
         {
-            return await ProcessSignedPutRequest<TB, TR>(new[] { _identity }, body, additionalHeaders);
-        }
-
-        internal async Task<ResponseResult<TR>> ProcessSignedPutRequest<TB, TR>(TB body, Authorisation[] authorisations)
-            where TB : PutBody
-        {
-            return await ProcessSignedPutRequest<TB, TR>(_identity, authorisations, body);
-        }
-
-        internal async Task<ResponseResult<TR>> ProcessSignedPutRequest<TB, TR>(IdentityDetails[] identities, TB body, Dictionary<string, string> additionalHeaders = null)
-            where TB : PutBody
-        {
-            var headers = identities.Where(x => x != null).Select(x => GenerateAuthorisationHeader(body, x)).ToArray();
-            var authenticationIdentity = identities.FirstOrDefault();
-            return await ProcessSignedPutRequest<TB, TR>(authenticationIdentity, headers, body, additionalHeaders);
-        }
-
-        internal async Task<ResponseResult<TR>> ProcessSignedPutRequest<TB, TR>(IdentityDetails authenticationIdentity, Authorisation[] authorisations, TB body, Dictionary<string, string> additionalHeaders = null)
-            where TB : PutBody
-        {
-            var minifiedPostBody = _json.ConvertFrom(body, true);
-            var request = new HttpRequestMessage(HttpMethod.Put, new Uri($"{NodeConstants.PutEndPoint}/{body.RequestId}", UriKind.Relative))
+            var minifiedPostBody = platformWriteRequest.Body;
+            var request = new HttpRequestMessage(HttpMethod.Put, new Uri($"{NodeConstants.PutEndPoint}/{platformWriteRequest.RequestId}", UriKind.Relative))
             {
                 Content = new StringContent(minifiedPostBody)
             };
-            if (additionalHeaders != null)
-            {
-                foreach (var additionalHeader in additionalHeaders)
-                    request.Headers.Add(additionalHeader.Key, additionalHeader.Value);
-            }
-            var fullAuthorisation = string.Join(";", authorisations.Select(x => x.Signature));
-            if (!request.Headers.Contains(NodeConstants.Iov42Authorisations))
-            {
-                var authorisationJson = _json.ConvertFrom(authorisations);
-                request.Headers.Add(NodeConstants.Iov42Authorisations, authorisationJson.ToBase64Url());
-            }
-
-            if (!request.Headers.Contains(NodeConstants.Iov42Authentication))
-            {
-                var authenticationSignature = authenticationIdentity.Crypto.Sign(fullAuthorisation.ToBytes());
-                var encodedAuthenticationSignature = authenticationSignature.ToBase64Url();
-                var authentication = new AuthenticationHeader(authenticationIdentity.Crypto.ProtocolId, authenticationIdentity.Id, encodedAuthenticationSignature);
-                var authenticationJson = _json.ConvertFrom(authentication);
-                request.Headers.Add(NodeConstants.Iov42Authentication, authenticationJson.ToBase64Url());
-            }
-
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(JsonMediaType));
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue(JsonMediaType);
+            AddWriteHeaders(platformWriteRequest, request);
             _eventualConsistency.StartWriteOperation();
-            var result = await ContactNode<TR>(request);
+            var result = await ContactNode<WriteResult>(request);
             _eventualConsistency.EndWriteOperation();
             return result;
         }
-
-        internal async Task<ResponseResult<T>> ProcessSignedGetRequest<T>(string identity, string path, string parameters = null)
+        
+        internal async Task<ResponseResult<T>> ProcessSignedGetRequest<T>(string url)
         {
-            var requestId = CreateUniqueId();
-            var url = $"{path}?requestId={requestId}&nodeId={_nodeInfo.NodeId}";
-            if (!string.IsNullOrEmpty(parameters))
-                url += parameters;
-            var encodedGetSignature = _identity.Crypto.Sign(url.ToBytes()).ToBase64Url();
-            var authentication = new AuthenticationHeader(_identity.Crypto.ProtocolId, identity, encodedGetSignature);
-            var authenticationJson = _json.ConvertFrom(authentication);
-            var encodedAuthenticationJsonForGet = authenticationJson.ToBase64Url();
+            var encodedAuthenticationJsonForGet = BuildSignedGetAuthentication(url);
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_client.BaseAddress, url))
             {
                 Headers = {{NodeConstants.Iov42Authentication, encodedAuthenticationJsonForGet}}
             };
-
             await _eventualConsistency.ReadOperation();
             return await ContactNode<T>(request);
+        }
+
+        private string BuildSignedGetAuthentication(string url)
+        {
+            var encodedGetSignature = _identity.Crypto.Sign(url.ToBytes()).ToBase64Url();
+            var authentication = new AuthenticationHeader(_identity.Crypto.ProtocolId, _identity.Id, encodedGetSignature);
+            var authenticationJson = _json.ConvertFrom(authentication);
+            var encodedAuthenticationJsonForGet = authenticationJson.ToBase64Url();
+            return encodedAuthenticationJsonForGet;
+        }
+
+        private void AddWriteHeaders(PlatformWriteRequest platformWriteRequest, HttpRequestMessage request)
+        {
+            if (platformWriteRequest.AdditionalHeaders != null)
+            {
+                foreach (var additionalHeader in platformWriteRequest.AdditionalHeaders)
+                    request.Headers.Add(additionalHeader.Key, additionalHeader.Value);
+            }
+
+            var authorisations = platformWriteRequest.Authorisations ?? new[] { GenerateAuthorisationHeader(platformWriteRequest.Body, _identity) };
+            var authorisationJson = _json.ConvertFrom(authorisations);
+            request.Headers.Add(NodeConstants.Iov42Authorisations, authorisationJson.ToBase64Url());
+
+            var authentication = platformWriteRequest.Authentication ?? GenerateAuthenticationHeader(_identity, authorisations);
+            var authenticationJson = _json.ConvertFrom(authentication);
+            request.Headers.Add(NodeConstants.Iov42Authentication, authenticationJson.ToBase64Url());
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(JsonMediaType));
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue(JsonMediaType);
         }
 
         private async Task<ResponseResult<T>> ContactNode<T>(HttpRequestMessage request)
@@ -175,33 +146,25 @@ namespace Iov42sdk.Support
             return redirect;
         }
 
-        internal Authorisation GenerateAuthorisationHeader<T>(T body, IdentityDetails identity)
+        internal Authorisation GenerateAuthorisationHeader(string body, IdentityDetails identity)
         {
-            var minifiedPostBody = _json.ConvertFrom(body, true);
-            var authorisedSignature = identity.Crypto.Sign(minifiedPostBody.ToBytes());
+            var authorisedSignature = identity.Crypto.Sign(body.ToBytes());
             var encodedAuthorisedSignature = authorisedSignature.ToBase64Url();
             return _delegatorId != null 
                 ? new Authorisation(_identity.Crypto.ProtocolId, _delegatorId, identity.Id, encodedAuthorisedSignature) 
                 : new Authorisation(_identity.Crypto.ProtocolId, identity.Id, null, encodedAuthorisedSignature);
         }
 
-        internal string BuildPath(params string[] sections)
+        internal AuthenticationHeader GenerateAuthenticationHeader(IdentityDetails authenticationIdentity, Authorisation[] authorisations)
         {
-            var parts = string.Join("/", sections);
-            return $"{_baseAddress.AbsolutePath}{parts}";
+            var fullAuthorisation = string.Join(";", authorisations.Select(x => x.Signature));
+            var authenticationSignature = authenticationIdentity.Crypto.Sign(fullAuthorisation.ToBytes());
+            var encodedAuthenticationSignature = authenticationSignature.ToBase64Url();
+            var authentication = new AuthenticationHeader(authenticationIdentity.Crypto.ProtocolId, authenticationIdentity.Id, encodedAuthenticationSignature);
+            return authentication;
         }
-
-        internal static string BuildPagingParameters(int limit, string next)
-        {
-            var parameters = "";
-            if (!string.IsNullOrEmpty(next))
-                parameters += $"&next={next}";
-            if (limit != -1)
-                parameters += $"&limit={limit}";
-            return parameters;
-        }
-
-        private Dictionary<string, string> GenerateClaimsHeader(Dictionary<string, string> claimMap)
+        
+        internal Dictionary<string, string> GenerateClaimsHeader(Dictionary<string, string> claimMap)
         {
             var json = _json.ConvertFrom(claimMap);
             var encoded = json.ToBase64Url();
@@ -209,27 +172,28 @@ namespace Iov42sdk.Support
             return headers;
         }
 
-        internal async Task<ResponseResult<CreateEndorsementsResult>> CreateClaimsEndorsements(Endorsements endorsements, EndorsementBody body,
+        internal async Task<ResponseResult<WriteResult>> CreateClaimsEndorsements(Endorsements endorsements, string requestId, string body,
             params Authorisation[] authorisations)
         {
             var claimMap = endorsements.GetClaims();
             var claimsHeader = GenerateClaimsHeader(claimMap);
-            return await ProcessSignedPutRequest<EndorsementBody, CreateEndorsementsResult>(_identity, authorisations, body, claimsHeader);
+            var request = new PlatformWriteRequest(requestId, body, authorisations).WithAdditionalHeaders(claimsHeader);
+            return await ProcessSignedPutRequest(request);
         }
-
-        public async Task<ResponseResult<CreateClaimsResult>> CreateClaims(Func<Dictionary<string, string>, CreateClaimsBody> createBody,
-            params string[] claims)
+        
+        internal async Task<ResponseResult<WriteResult>> CreateClaims(Func<Dictionary<string, string>, CreateClaimsBody> createBody,
+            string[] claims, Authorisation[] authorisations = null, AuthenticationHeader authentication = null)
         {
             var claimMap = claims.ToDictionary(x => _identity.Crypto.GetHash(x), x => x);
             var headers = GenerateClaimsHeader(claimMap);
             var body = createBody(claimMap);
-            return await ProcessSignedPutRequest<CreateClaimsBody, CreateClaimsResult>(body, headers);
+            var request = new PlatformWriteRequest(body.RequestId, body.Serialize(), authorisations, authentication).WithAdditionalHeaders(headers);
+            return await ProcessSignedPutRequest(request);
         }
 
-        internal string CreateUniqueId()
+        internal static string CreateUniqueId()
         {
-            var id = Guid.NewGuid().ToString();
-            return _requestIdRoot != null ? $"{_requestIdRoot}-{id}" : id;
+            return Guid.NewGuid().ToString();
         }
     }
 }

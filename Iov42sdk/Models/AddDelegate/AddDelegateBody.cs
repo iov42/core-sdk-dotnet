@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.AddDelegate
 {
-    public class AddDelegateBody : PutBody
+    public class AddDelegateBody : WriteBody
     {
         public AddDelegateBody() 
             : base(NodeConstants.AddDelegateRequestType)

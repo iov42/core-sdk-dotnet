@@ -2,7 +2,7 @@
 
 namespace Iov42sdk.Models.CreateClaims
 {
-    public class CreateClaimsBody : PutBody
+    public class CreateClaimsBody : WriteBody
     {
         public CreateClaimsBody()
             : base(null)

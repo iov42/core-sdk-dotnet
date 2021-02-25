@@ -12,6 +12,7 @@ namespace IntegrationTests
         {
             using var test = new IntegrationTestCreation();
             var info = await test.Client.GetNodeInfo();
+
             Assert.IsNotNull(info);
             Assert.IsTrue(info.Success);
             var nodeInfo = info.Value;

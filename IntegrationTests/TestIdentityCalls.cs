@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using BouncyCastleCrypto;
 using IntegrationTests.Support;
 using Iov42sdk.Connection;
+using Iov42sdk.Models;
+using Iov42sdk.Models.IssueIdentity;
 using Iov42sdk.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -30,6 +32,7 @@ namespace IntegrationTests
         {
             var newId = _test.IdentityBuilder.Create();
             var issueIdentityResponse = await _test.Client.CreateIdentity(newId);
+
             Assert.IsTrue(issueIdentityResponse.Success);
             Assert.IsNotNull(issueIdentityResponse.Value.RequestId);
             Assert.IsNotNull(issueIdentityResponse.Value.Proof);
@@ -41,6 +44,7 @@ namespace IntegrationTests
         public async Task ShouldGetIdentity()
         {
             var getIdentityResponse = await _test.Client.GetIdentity(_test.Identity.Id);
+            
             Assert.IsTrue(getIdentityResponse.Success);
             Assert.IsNotNull(getIdentityResponse.Value.IdentityId);
             Assert.IsNotNull(getIdentityResponse.Value.Proof);
@@ -51,6 +55,7 @@ namespace IntegrationTests
         public async Task ShouldGetIdentityPublicKey()
         {
             var getPublicKeyResponse = await _test.Client.GetIdentityPublicKey(_test.Identity.Id);
+            
             Assert.IsTrue(getPublicKeyResponse.Success);
             Assert.IsNotNull(getPublicKeyResponse.Value.Key);
             Assert.IsNotNull(getPublicKeyResponse.Value.ProtocolId);
@@ -62,6 +67,7 @@ namespace IntegrationTests
         {
             var other = new IntegrationTestCreation();
             var getPublicKeyResponse = await other.Client.GetIdentityPublicKey(_test.Identity.Id);
+            
             Assert.IsTrue(getPublicKeyResponse.Success);
             Assert.IsNotNull(getPublicKeyResponse.Value.Key);
             Assert.IsNotNull(getPublicKeyResponse.Value.ProtocolId);
@@ -75,6 +81,7 @@ namespace IntegrationTests
             var _ = await _test.Client.CreateIdentity(newId);
             var horse = "Horse"+newId.Id;
             var __ = await _test.Client.CreateUniqueAssetType(horse);
+            
             // Rebuild the id from the underlying keypair strings and the id
             var serialized = newId.Crypto.Pair.Serialize();
             var privateKey = serialized.PrivateKey;
@@ -82,10 +89,13 @@ namespace IntegrationTests
             var newKeyPair = new SerializedKeys(privateKey, publicKey);
             var pair = new BouncyKeyPair(newKeyPair);
             var reuse = _test.IdentityBuilder.Create(newId.Id, pair);
+            
             // Create a client using the reused identity
             var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.Environment, reuse);
+            
             // Test an authenticated call using the reused identity
             var response = await reuseClient.CreateUniqueAsset("Trevor", horse);
+            
             Assert.IsTrue(response.Success);
         }
 
@@ -94,15 +104,43 @@ namespace IntegrationTests
         {
             var newId = _test.IdentityBuilder.Create();
             var _ = await _test.Client.CreateIdentity(newId);
+
             var horse = "Horse" + newId.Id;
             var __ = await _test.Client.CreateUniqueAssetType(horse);
+
             // This will generate a new key pair which won't match the original
             var reuse = _test.IdentityBuilder.Create();
+            
             // Create a client using the reused identity
             var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.Environment, reuse);
+            
             // Test an authenticated call using the reused identity
             var response = await reuseClient.CreateUniqueAsset("Trevor", horse);
+            
             Assert.IsFalse(response.Success);
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateANewIdentityUsingRequest()
+        {
+            var newId = _test.IdentityBuilder.Create();
+            var body = new IssueIdentityBody(newId.Id, new Credentials(newId.Crypto.Pair.PublicKeyBase64String, newId.Crypto.ProtocolId));
+            var request = _test.Client.BuildRequest(body, new[] {newId}, newId);
+            var issueIdentityResponse = await _test.Client.Write(request);
+            issueIdentityResponse.VerifyWriteResult();
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateANewIdentityUsingRawRequest()
+        {
+            var newId = _test.IdentityBuilder.Create();
+            var body = new IssueIdentityBody(newId.Id, new Credentials(newId.Crypto.Pair.PublicKeyBase64String, newId.Crypto.ProtocolId));
+            var bodyText = body.Serialize();
+            var authorisations = new[] { _test.Client.GenerateAuthorisation(bodyText, newId) };
+            var authentication = _test.Client.GenerateAuthentication(authorisations, newId);
+            var request = new PlatformWriteRequest(body.RequestId, bodyText, authorisations, authentication);
+            var issueIdentityResponse = await _test.Client.Write(request);
+            issueIdentityResponse.VerifyWriteResult();
         }
     }
 }

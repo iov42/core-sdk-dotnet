@@ -29,8 +29,8 @@ namespace Iov42sdk.Connection
 
         private static async Task<IPlatformClient> Create(string baseUrl, IdentityDetails identity, bool isNewIdentity)
         {
-            var client = new PlatformClient(baseUrl, identity);
-            await client.Init(isNewIdentity);
+            var client = new PlatformClient(baseUrl);
+            await client.Init(identity, isNewIdentity);
             return client;
         }
     }

@@ -4,6 +4,7 @@ using BouncyCastleCrypto;
 using IntegrationTests.Support;
 using Iov42sdk.Connection;
 using Iov42sdk.Identity;
+using Iov42sdk.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests.UseCases
@@ -42,13 +43,14 @@ namespace IntegrationTests.UseCases
             var claimResponse = await aliceClient.CreateAssetClaims(carType, carId, firstRegistration);
             Assert.IsTrue(claimResponse.Success);
 
-            // MVA endorses Alice's claim of the registration date (as it's the authority then anyone can trust that endorsement). This requires that both Alice and MVA signs the request
+            // MVA endorses Alice's claim of the registration date (as it's the authority then anyone can trust that endorsement). This requires
+            // that both Alice and MVA signs the request
             var endorsements = mvaClient.CreateAssetEndorsements(carType, carId)
                 .AddEndorsement(firstRegistration);
-            var body = endorsements.GenerateAssetEndorsementBody(carType);
+            var body = endorsements.GenerateAssetEndorsementBody(carType).Serialize();
             var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
             var mvaAuthorisation = mvaClient.GenerateAuthorisation(body);
-            var endorsementResponse = await mvaClient.CreateAssetClaimsEndorsements(endorsements, body, aliceAuthorisation, mvaAuthorisation);
+            var endorsementResponse = await mvaClient.CreateAssetClaimsEndorsements(endorsements, endorsements.RequestId, body, aliceAuthorisation, mvaAuthorisation);
             Assert.IsTrue(endorsementResponse.Success);
 
             // Allow eventual consistency to persist the data

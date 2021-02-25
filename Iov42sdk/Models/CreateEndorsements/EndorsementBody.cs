@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 namespace Iov42sdk.Models.CreateEndorsements
 {
     public class EndorsementBody 
-        : PutBody
+        : WriteBody
     {
         public EndorsementBody()
             : base(null)

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using Iov42sdk.Crypto;
@@ -8,7 +10,6 @@ using Iov42sdk.Models.AddDelegate;
 using Iov42sdk.Models.CreateAsset;
 using Iov42sdk.Models.CreateAssetType;
 using Iov42sdk.Models.CreateClaims;
-using Iov42sdk.Models.CreateEndorsements;
 using Iov42sdk.Models.GetAsset;
 using Iov42sdk.Models.GetAssetType;
 using Iov42sdk.Models.GetClaim;
@@ -30,20 +31,24 @@ namespace Iov42sdk.Connection
 {
     public class PlatformClient : IPlatformClient
     {
-        private readonly IdentityDetails _identity;
+        private readonly Uri _baseUrl;
+        private IdentityDetails _identity;
         private readonly IovClient _iovClient;
+        private PlatformGetRequestBuilder _getBuilder;
 
         // Use ClientBuilder to create an instance
-        internal PlatformClient(string baseUrl, IdentityDetails identity)
+        internal PlatformClient(string baseUrl)
         {
-            _identity = identity;
-            _iovClient = new IovClient(baseUrl);
+            _baseUrl = new Uri(baseUrl);
+            _iovClient = new IovClient(_baseUrl);
         }
 
-        internal async Task<IKeyPair> Init(bool isNewIdentity, string requestIdRoot = null)
+        internal async Task<IKeyPair> Init(IdentityDetails identity, bool isNewIdentity)
         {
-            var info  = await GetNodeInfo();
-            _iovClient.Init(_identity, info.Value, requestIdRoot);
+            _identity = identity;
+            var info = await GetNodeInfo();
+            _getBuilder = new PlatformGetRequestBuilder(_baseUrl, info.Value.NodeId);
+            _iovClient.Init(_identity);
             if (isNewIdentity)
                 await CreateIdentity(_identity);
             return _identity.Crypto.Pair;
@@ -53,25 +58,28 @@ namespace Iov42sdk.Connection
         {
             _iovClient?.Dispose();
         }
+        public async Task<ResponseResult<WriteResult>> Write(PlatformWriteRequest request)
+        {
+            return await _iovClient.ProcessSignedPutRequest(request);
+        }
 
         public async Task<ResponseResult<HealthStatusResult>> GetHealthStatus()
         {
-            return await _iovClient.ProcessSimpleGetRequest<HealthStatusResult>(NodeConstants.HealthChecksEndPoint);
+            var request = _getBuilder.CreateUnsigned(NodeConstants.HealthChecksEndPoint);
+            return await _iovClient.ProcessSimpleGetRequest<HealthStatusResult>(request.Path);
         }
 
         public async Task<ResponseResult<RequestStatusResult>> GetRequestStatus(string requestId)
         {
-            return await _iovClient.ProcessSimpleGetRequest<RequestStatusResult>(_iovClient.BuildPath(NodeConstants.RequestsEndPoint, requestId));
+            var request = _getBuilder.CreateUnsigned(NodeConstants.RequestsEndPoint, requestId);
+            return await _iovClient.ProcessSimpleGetRequest<RequestStatusResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateIdentityResult>> CreateIdentity(IdentityDetails identity)
+        public async Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity)
         {
-            var body = new IssueIdentityBody(identity.Id, new Credentials
-                {
-                    Key = identity.Crypto.Pair.PublicKeyBase64String,
-                    ProtocolId = identity.Crypto.ProtocolId
-                });
-            return await _iovClient.ProcessSignedPutRequest<IssueIdentityBody, CreateIdentityResult>(new [] { identity }, body);
+            var body = new IssueIdentityBody(identity.Id, new Credentials(identity.Crypto.Pair.PublicKeyBase64String, identity.Crypto.ProtocolId));
+            var request = BuildRequest(body, new[] {identity}, identity);
+            return await Write(request);
         }
 
         public void UseDelegator(string delegatorId)
@@ -86,98 +94,100 @@ namespace Iov42sdk.Connection
 
         public async Task<ResponseResult<IdentityResult>> GetIdentity(string identity)
         {
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, identity);
-            return await _iovClient.ProcessSignedGetRequest<IdentityResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, identity);
+            return await _iovClient.ProcessSignedGetRequest<IdentityResult>(request.Path);
         }
 
         public async Task<ResponseResult<IdentityPublicKeyResult>> GetIdentityPublicKey(string identity)
         {
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, identity, NodeConstants.PublicKeyEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<IdentityPublicKeyResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, identity, NodeConstants.PublicKeyEndPoint);
+            return await _iovClient.ProcessSignedGetRequest<IdentityPublicKeyResult>(request.Path);
         }
 
-        public async Task<ResponseResult<AddDelegateResult>> AddDelegate(IdentityDetails delegateIdentity)
+        public async Task<ResponseResult<WriteResult>> AddDelegate(IdentityDetails delegateIdentity)
         {
             var body = new AddDelegateBody(delegateIdentity.Id, _identity.Id);
-            return await _iovClient.ProcessSignedPutRequest<AddDelegateBody, AddDelegateResult>(new[] { _identity, delegateIdentity }, body);
+            var request = BuildRequest(body, new[] {_identity, delegateIdentity}, _identity);
+            return await Write(request);
         }
-
+        
         public async Task<ResponseResult<GetDelegatesResult>> GetIdentityDelegates(string identityId = null)
         {
             var id = identityId ?? _identity.Id;
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, id, NodeConstants.DelegatesEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<GetDelegatesResult>(id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, id, NodeConstants.DelegatesEndPoint);
+            return await _iovClient.ProcessSignedGetRequest<GetDelegatesResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateAssetTypeResult>> CreateUniqueAssetType(string assetTypeId)
+        public async Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId)
         {
             var body = new CreateUniqueAssetTypeBody(assetTypeId);
-            return await _iovClient.ProcessSignedPutRequest<CreateAssetTypeBody, CreateAssetTypeResult>(body);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
-
-        public async Task<ResponseResult<CreateAssetTypeResult>> CreateQuantifiableAssetType(string assetTypeId, int scale)
+        
+        public async Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale)
         {
             var body = new CreateQuantifiableAssetTypeBody(assetTypeId, scale);
-            return await _iovClient.ProcessSignedPutRequest<CreateAssetTypeBody, CreateAssetTypeResult>(body);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
-
+        
         public async Task<ResponseResult<UniqueAssetTypeResult>> GetUniqueAssetType(string assetTypeAddress)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeAddress);
-            return await _iovClient.ProcessSignedGetRequest<UniqueAssetTypeResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeAddress);
+            return await _iovClient.ProcessSignedGetRequest<UniqueAssetTypeResult>(request.Path);
         }
 
         public async Task<ResponseResult<QuantifiableAssetTypeResult>> GetQuantifiableAssetType(string assetTypeAddress)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeAddress);
-            return await _iovClient.ProcessSignedGetRequest<QuantifiableAssetTypeResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeAddress);
+            return await _iovClient.ProcessSignedGetRequest<QuantifiableAssetTypeResult>(request.Path);
         }
 
         public async Task<ResponseResult<ProofResult>> GetProof(string requestId)
         {
-            var path = _iovClient.BuildPath(NodeConstants.ProofsEndPoint, requestId);
-            return await _iovClient.ProcessSignedGetRequest<ProofResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.ProofsEndPoint, requestId);
+            return await _iovClient.ProcessSignedGetRequest<ProofResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateAssetResult>> CreateUniqueAsset(string address, string assetTypeAddress)
+        public async Task<ResponseResult<WriteResult>> CreateUniqueAsset(string address, string assetTypeAddress)
         {
             var body = new CreateUniqueAssetBody(address, assetTypeAddress);
-            return await _iovClient.ProcessSignedPutRequest<CreateAssetBody, CreateAssetResult>(body);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
 
-        public async Task<ResponseResult<CreateAssetResult>> CreateQuantifiableAccount(string address, string assetTypeAddress, BigInteger quantity = new BigInteger())
+        public async Task<ResponseResult<WriteResult>> CreateQuantifiableAccount(string address, string assetTypeAddress, BigInteger quantity = new BigInteger())
         {
             var body = new CreateQuantifiableAssetBody(address, assetTypeAddress, quantity.ToString());
-            return await _iovClient.ProcessSignedPutRequest<CreateAssetBody, CreateAssetResult>(body);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
 
-        public async Task<ResponseResult<UpdateBalanceResult>> AddBalance(string address, string assetTypeAddress, BigInteger quantity)
+        public async Task<ResponseResult<WriteResult>> AddBalance(string address, string assetTypeAddress, BigInteger quantity)
         {
             var body = new UpdateBalanceBody(address, assetTypeAddress, quantity.ToString());
-            return await _iovClient.ProcessSignedPutRequest<UpdateBalanceBody, UpdateBalanceResult>(body);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
 
         public async Task<ResponseResult<UniqueAssetResult>> GetUniqueAsset(string address, string assetTypeAddress)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeAddress, NodeConstants.AssetsEndPoint, address);
-            return await _iovClient.ProcessSignedGetRequest<UniqueAssetResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeAddress, NodeConstants.AssetsEndPoint, address);
+            return await _iovClient.ProcessSignedGetRequest<UniqueAssetResult>(request.Path);
         }
 
         public async Task<ResponseResult<QuantifiableAssetResult>> GetQuantifiableAsset(string address, string assetTypeAddress)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeAddress, NodeConstants.AssetsEndPoint, address);
-            return await _iovClient.ProcessSignedGetRequest<QuantifiableAssetResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeAddress, NodeConstants.AssetsEndPoint, address);
+            return await _iovClient.ProcessSignedGetRequest<QuantifiableAssetResult>(request.Path);
         }
 
-        public async Task<ResponseResult<TransfersResult>> TransferAssets(params SingleTransfer[] transfers)
+        public async Task<ResponseResult<WriteResult>> TransferAssets(params SingleTransfer[] transfers)
         {
             var body = new TransfersBody(transfers);
-            return await _iovClient.ProcessSignedPutRequest<TransfersBody, TransfersResult>(body);
-        }
-
-        public async Task<ResponseResult<TransfersResult>> TransferAssets(TransferRequest request)
-        {
-            return await _iovClient.ProcessSignedPutRequest<TransfersBody, TransfersResult>(request.Body, request.Authorisations);
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
         }
 
         public SingleTransfer CreateOwnershipTransfer(string assetId, string assetTypeId, string fromIdentityId, string toIdentityId)
@@ -187,44 +197,44 @@ namespace Iov42sdk.Connection
 
         public SingleTransfer CreateQuantityTransfer(string fromAssetId, string toAssetId, string assetTypeId, BigInteger quantity)
         {
-            return new TransferQuantity(fromAssetId, toAssetId,  assetTypeId, quantity.ToString());
+            return new TransferQuantity(fromAssetId, toAssetId, assetTypeId, quantity.ToString());
         }
 
         public async Task<ResponseResult<NodeInfo>> GetNodeInfo()
         {
-            return await _iovClient.ProcessSimpleGetRequest<NodeInfo>(_iovClient.BuildPath(NodeConstants.NodeInfoEndPoint));
+            return await _iovClient.ProcessSimpleGetRequest<NodeInfo>(NodeConstants.NodeInfoEndPoint);
         }
 
-        public async Task<ResponseResult<CreateClaimsResult>> CreateIdentityClaims(params string[] claims)
+        public async Task<ResponseResult<WriteResult>> CreateIdentityClaims(params string[] claims)
         {
-            return await _iovClient.CreateClaims(claimMap => 
+            return await _iovClient.CreateClaims(claimMap =>
                 new CreateClaimsBody(NodeConstants.CreateIdentityClaimsRequestType, _identity.Id, claimMap.Keys.ToArray()), claims);
         }
 
         public async Task<ResponseResult<ClaimsResult>> GetIdentityClaims(int limit = 20, string next = null)
         {
-            var parameters = IovClient.BuildPagingParameters(limit, next);
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, _identity.Id, NodeConstants.ClaimsEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(_identity.Id, path, parameters);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, _identity.Id, NodeConstants.ClaimsEndPoint)
+                .WithPagingParameters(limit, next);
+            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(request.Path);
         }
 
         public async Task<ResponseResult<ClaimsResult>> GetIdentityClaims(string identityId, int limit = 20, string next = null)
         {
-            var parameters = IovClient.BuildPagingParameters(limit, next);
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, identityId, NodeConstants.ClaimsEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(_identity.Id, path, parameters);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, identityId, NodeConstants.ClaimsEndPoint)
+                .WithPagingParameters(limit, next);
+            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(request.Path);
         }
 
         public async Task<ResponseResult<ClaimResult>> GetIdentityClaim(string claim)
         {
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, _identity.Id, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
-            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, _identity.Id, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
+            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(request.Path);
         }
 
         public async Task<ResponseResult<ClaimResult>> GetIdentityClaim(string identityId, string claim)
         {
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, identityId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
-            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, identityId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
+            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(request.Path);
         }
 
         public Endorsements CreateIdentityEndorsements(string identityId = null)
@@ -242,18 +252,18 @@ namespace Iov42sdk.Connection
             return CreateEndorsements(subjectTypeId, subject);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
+        public async Task<ResponseResult<WriteResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, string requestId, string body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, requestId, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetIdentityEndorsement(string identity, string claim, string endorser)
         {
-            var path = _iovClient.BuildPath(NodeConstants.IdentitiesEndPoint, identity, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
-            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.IdentitiesEndPoint, identity, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
+            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateClaimsResult>> CreateAssetTypeClaims(string assetTypeId, params string[] claims)
+        public async Task<ResponseResult<WriteResult>> CreateAssetTypeClaims(string assetTypeId, params string[] claims)
         {
             return await _iovClient.CreateClaims(claimMap =>
                 new CreateClaimsBody(NodeConstants.CreateAssetTypeClaimsRequestType, assetTypeId, claimMap.Keys.ToArray()), claims);
@@ -261,29 +271,29 @@ namespace Iov42sdk.Connection
 
         public async Task<ResponseResult<ClaimsResult>> GetAssetTypeClaims(string assetTypeId, int limit = 20, string next = null)
         {
-            var parameters = IovClient.BuildPagingParameters(limit, next);
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(_identity.Id, path, parameters);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint)
+                .WithPagingParameters(limit, next);
+            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(request.Path);
         }
 
         public async Task<ResponseResult<ClaimResult>> GetAssetTypeClaim(string assetTypeId, string claim)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
-            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
+            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
+        public async Task<ResponseResult<WriteResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, string requestId, string body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, requestId, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetAssetTypeEndorsement(string assetTypeId, string claim, string endorser)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
-            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
+            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateClaimsResult>> CreateAssetClaims(string assetTypeId, string assetId, params string[] claims)
+        public async Task<ResponseResult<WriteResult>> CreateAssetClaims(string assetTypeId, string assetId, params string[] claims)
         {
             return await _iovClient.CreateClaims(claimMap =>
                 new CreateClaimsBody(NodeConstants.CreateAssetClaimsRequestType, assetTypeId, assetId, claimMap.Keys.ToArray()), claims);
@@ -291,43 +301,61 @@ namespace Iov42sdk.Connection
 
         public async Task<ResponseResult<ClaimsResult>> GetAssetClaims(string assetTypeId, string assetId, int limit = 20, string next = null)
         {
-            var parameters = IovClient.BuildPagingParameters(limit, next);
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint);
-            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(_identity.Id, path, parameters);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint)
+                .WithPagingParameters(limit, next);
+            return await _iovClient.ProcessSignedGetRequest<ClaimsResult>(request.Path);
         }
 
         public async Task<ResponseResult<ClaimResult>> GetAssetClaim(string assetTypeId, string assetId, string claim)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
-            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim));
+            return await _iovClient.ProcessSignedGetRequest<ClaimResult>(request.Path);
         }
 
-        public async Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations)
+        public async Task<ResponseResult<WriteResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, string requestId, string body, params Authorisation[] authorisations)
         {
-            return await _iovClient.CreateClaimsEndorsements(endorsements, body, authorisations);
+            return await _iovClient.CreateClaimsEndorsements(endorsements, requestId, body, authorisations);
         }
 
         public async Task<ResponseResult<EndorsementResult>> GetAssetEndorsement(string assetTypeId, string assetId, string claim, string endorser)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
-            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(_identity.Id, path);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.ClaimsEndPoint, _identity.Crypto.GetHash(claim), NodeConstants.EndorsementsEndPoint, endorser);
+            return await _iovClient.ProcessSignedGetRequest<EndorsementResult>(request.Path);
         }
 
         public async Task<ResponseResult<TransactionsResult>> GetTransactions(string assetTypeId, string assetId, int limit = 20, string next = null)
         {
-            var path = _iovClient.BuildPath(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.TransactionsEndPoint);
-            var parameters = IovClient.BuildPagingParameters(limit, next);
-            return await _iovClient.ProcessSignedGetRequest<TransactionsResult>(_identity.Id, path, parameters);
+            var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.TransactionsEndPoint)
+                .WithPagingParameters(limit, next);
+            return await _iovClient.ProcessSignedGetRequest<TransactionsResult>(request.Path);
         }
 
-        public Authorisation GenerateAuthorisation<T>(T body)
+        public Authorisation GenerateAuthorisation(string body, IdentityDetails identity = null)
         {
-            return _iovClient.GenerateAuthorisationHeader(body, _identity);
+            return _iovClient.GenerateAuthorisationHeader(body, identity ?? _identity);
+        }
+
+        public AuthenticationHeader GenerateAuthentication(Authorisation[] authorisations, IdentityDetails identity = null)
+        {
+            return _iovClient.GenerateAuthenticationHeader(identity ?? _identity, authorisations);
         }
 
         private Endorsements CreateEndorsements(string subjectTypeId, string subject)
         {
-            return new Endorsements(_iovClient.CreateUniqueId(), subjectTypeId, subject, _identity);
+            return new Endorsements(IovClient.CreateUniqueId(), subjectTypeId, subject, _identity);
+        }
+
+        public PlatformWriteRequest BuildRequest(WriteBody body, IdentityDetails[] authorisationIdentities = null, IdentityDetails authenticationIdentity = null)
+        {
+            var bodyText = body.Serialize();
+            var authorisations = (authorisationIdentities ?? new[] {_identity}).Select(x => GenerateAuthorisation(bodyText, x)).ToArray();
+            var authentication = GenerateAuthentication(authorisations, authenticationIdentity);
+            return new PlatformWriteRequest(body.RequestId, bodyText, authorisations, authentication);
+        }
+
+        public Dictionary<string, string> GenerateClaimsHeader(Dictionary<string, string> claimMap)
+        {
+            return _iovClient.GenerateClaimsHeader(claimMap);
         }
     }
 }

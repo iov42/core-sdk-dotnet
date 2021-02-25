@@ -2,6 +2,9 @@
 using BouncyCastleCrypto;
 using Iov42sdk.Connection;
 using Iov42sdk.Identity;
+using Iov42sdk.Models;
+using Iov42sdk.Support;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests.Support
 {
@@ -27,6 +30,19 @@ namespace IntegrationTests.Support
         {
             var id = Guid.NewGuid().ToString();
             return root != null ? $"{root}-{id}" : id;
+        }
+    }
+
+    public static class WriteResultExtension
+    {
+        public static void VerifyWriteResult(this ResponseResult<WriteResult> result, int resources = 1)
+        {
+            Assert.IsTrue(result.Success);
+            Assert.IsNotNull(result.Value.RequestId);
+            Assert.IsNotNull(result.Value.Proof);
+            Assert.IsNotNull(result.Value.Resources);
+            Assert.IsTrue(result.Value.Resources.Length >= resources);
+            Assert.IsNull(result.Value.Errors);
         }
     }
 }

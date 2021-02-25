@@ -28,11 +28,14 @@ namespace IntegrationTests
         {
             var newId = _test.IdentityBuilder.Create();
             var issueIdentityResponse = await _test.Client.CreateIdentity(newId);
+
             var proofId = issueIdentityResponse.Value.RequestId;
             var proofResponse = await _test.Client.GetProof(proofId);
+            
             Assert.IsTrue(proofResponse.Success);
             Assert.IsNotNull(proofResponse.Value);
             Assert.IsNotNull(proofResponse.Value.RequestId);
+            
             VerifyFingerprints(proofResponse.Value.ParentFingerprints);
             VerifySignatories(proofResponse.Value.Signatories);
             VerifyProof(proofResponse.Value.Proof);
@@ -100,7 +103,6 @@ namespace IntegrationTests
             Assert.IsNotNull(nodeId.Type);
             if (!ContainsCompletion(nodeId.Type) && !IsSecurity(nodeId.Type) && !IsRoot(nodeId.Type))
                 Assert.IsNotNull(nodeId.Id);
-            
         }
 
         private static void VerifySignatories(ProofSignatory[] signatories)

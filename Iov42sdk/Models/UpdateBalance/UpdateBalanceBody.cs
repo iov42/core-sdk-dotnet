@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.UpdateBalance
 {
-    public class UpdateBalanceBody : PutBody
+    public class UpdateBalanceBody : WriteBody
     {
         public UpdateBalanceBody() 
             : base(NodeConstants.AddQuantityRequestType)

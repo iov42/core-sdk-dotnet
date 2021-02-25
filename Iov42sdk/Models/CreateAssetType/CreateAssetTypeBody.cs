@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.CreateAssetType
 {
-    public abstract class CreateAssetTypeBody : PutBody
+    public abstract class CreateAssetTypeBody : WriteBody
     {
         protected static readonly string UniqueAssetType = "Unique";
         protected static readonly string QuantifiableAssetType = "Quantifiable";

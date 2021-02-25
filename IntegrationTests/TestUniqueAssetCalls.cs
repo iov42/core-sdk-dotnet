@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
 using IntegrationTests.Support;
+using Iov42sdk.Models.CreateAsset;
+using Iov42sdk.Models.CreateAssetType;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests
@@ -26,12 +28,7 @@ namespace IntegrationTests
         {
             var horseId = _test.CreateUniqueId("horse");
             var newUniqueAssetTypeResponse = await _test.Client.CreateUniqueAssetType(horseId);
-            Assert.IsTrue(newUniqueAssetTypeResponse.Success);
-            Assert.IsNotNull(newUniqueAssetTypeResponse.Value.RequestId);
-            Assert.IsNotNull(newUniqueAssetTypeResponse.Value.Proof);
-            Assert.IsNotNull(newUniqueAssetTypeResponse.Value.Resources);
-            Assert.AreEqual(1, newUniqueAssetTypeResponse.Value.Resources.Length);
-            Assert.IsNull(newUniqueAssetTypeResponse.Value.Errors);
+            newUniqueAssetTypeResponse.VerifyWriteResult();
         }
 
         [TestMethod]
@@ -39,7 +36,9 @@ namespace IntegrationTests
         {
             var horseId = _test.CreateUniqueId("horse");
             await _test.Client.CreateUniqueAssetType(horseId);
+
             var getAssetTypeResponse = await _test.Client.GetUniqueAssetType(horseId);
+
             Assert.IsTrue(getAssetTypeResponse.Success);
             Assert.AreEqual(horseId, getAssetTypeResponse.Value.AssetTypeId);
             Assert.AreEqual(_test.Identity.Id, getAssetTypeResponse.Value.OwnerId);
@@ -52,14 +51,10 @@ namespace IntegrationTests
         {
             var horseId = _test.CreateUniqueId("horse");
             await _test.Client.CreateUniqueAssetType(horseId);
+            
             var trevorId = _test.CreateUniqueId("trevor");
             var newUniqueAssetResponse = await _test.Client.CreateUniqueAsset(trevorId, horseId);
-            Assert.IsTrue(newUniqueAssetResponse.Success);
-            Assert.IsNotNull(newUniqueAssetResponse.Value.RequestId);
-            Assert.IsNotNull(newUniqueAssetResponse.Value.Proof);
-            Assert.IsNotNull(newUniqueAssetResponse.Value.Resources);
-            Assert.AreEqual(1, newUniqueAssetResponse.Value.Resources.Length);
-            Assert.IsNull(newUniqueAssetResponse.Value.Errors);
+            newUniqueAssetResponse.VerifyWriteResult();
         }
 
         [TestMethod]
@@ -67,14 +62,40 @@ namespace IntegrationTests
         {
             var horseId = _test.CreateUniqueId("horse");
             await _test.Client.CreateUniqueAssetType(horseId);
+            
             var trevorId = _test.CreateUniqueId("trevor");
             await _test.Client.CreateUniqueAsset(trevorId, horseId);
+            
             var getUniqueAssetResponse = await _test.Client.GetUniqueAsset(trevorId, horseId);
+            
             Assert.IsTrue(getUniqueAssetResponse.Success);
             Assert.AreEqual(getUniqueAssetResponse.Value.AssetId, trevorId);
             Assert.AreEqual(getUniqueAssetResponse.Value.AssetTypeId, horseId);
             Assert.AreEqual(getUniqueAssetResponse.Value.OwnerId, _test.Identity.Id);
             Assert.IsNotNull(getUniqueAssetResponse.Value.Proof);
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateANewUniqueAssetTypeUsingRequest()
+        {
+            var horseId = _test.CreateUniqueId("horse");
+            var body = new CreateUniqueAssetTypeBody(horseId);
+            var request = _test.Client.BuildRequest(body);
+            var newUniqueAssetTypeResponse = await _test.Client.Write(request);
+            newUniqueAssetTypeResponse.VerifyWriteResult();
+        }
+
+        [TestMethod]
+        public async Task ShouldCreateANewUniqueAssetUsingRequest()
+        {
+            var horseId = _test.CreateUniqueId("horse");
+            await _test.Client.CreateUniqueAssetType(horseId);
+
+            var trevorId = _test.CreateUniqueId("trevor");
+            var body = new CreateUniqueAssetBody(trevorId, horseId);
+            var request = _test.Client.BuildRequest(body);
+            var newUniqueAssetResponse = await _test.Client.Write(request);
+            newUniqueAssetResponse.VerifyWriteResult();
         }
     }
 } 

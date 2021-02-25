@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.CreateAsset
 {
-    public abstract class CreateAssetBody : PutBody
+    public abstract class CreateAssetBody : WriteBody
     {
         protected CreateAssetBody() 
             : base(NodeConstants.CreateAssetRequestType)

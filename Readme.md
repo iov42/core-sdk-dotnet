@@ -37,19 +37,19 @@ This creates an IdentityBuilder and it will use the BouncyCastle crypto implemen
 var identity = identityBuilder.Create();
 ```
 
-This creates a new identity with a randomly created id and a new key pair. 
+This creates a new identity with a randomly created id and a new key pair. Note - this has not been saved to the platform yet (that's the next step).
 
 You can also use an existing identity by passing the id and the keypair to use.
 
 ### Creating the connection
 
-To interact with the platform you need to create a client. To do this, call the ClientBuilder and pass the url for the endpoint and the identity you just created. If it is a new identity that needs to be created on the platform then you can use:
+To interact with the platform you need to create a client. To do this, call the ClientBuilder and pass the url for the endpoint and the identity you just created. If it is a new identity that has not been saved to the platform before then you use:
 
 ``` csharp
 var client = await ClientBuilder.CreateWithNewIdentity("a url here", identity);
 ```
 
-If you plan to use an existing entry then you can use:
+If you plan to use an entry that has been previously saved then you can use:
 
 ``` csharp
 var client = await ClientBuilder.CreateWithExistingIdentity("a url here", identity);
@@ -82,7 +82,7 @@ You can create another identity using some of the calls you did above.
 var newIdentity = identityBuilder.Create();
 var issueIdentityResponse = await client.CreateIdentity(newIdentity);
 ```
-This will create a new identity on the platform using the identifier and keypair in newIdentity. If you wanted to start using this identity for calls to the platform you would need to create a new client passing this identity.
+This will create a new identity on the platform using the identifier and keypair in newIdentity. If you wanted to switch to using this identity for calls to the platform you would need to create a new client passing this identity.
 
 ### Create an asset type
 
@@ -100,7 +100,7 @@ To create a new quantifiable asset type:
 ``` csharp
 var eGbpId = "eGBP";
 var numberOfDecimalPlaces = 2;
-var newQuantifiableAssetTypeResponse = await _test.Client.CreateQuantifiableAssetType(eGbpId, numberOfDecimalPlaces);
+var newQuantifiableAssetTypeResponse = await client.CreateQuantifiableAssetType(eGbpId, numberOfDecimalPlaces);
 ```
 The scale is the number of decimal places to support.
 
@@ -116,20 +116,20 @@ var newUniqueAssetResponse = await client.CreateUniqueAsset(trevorId, horseId);
 It is also possible to retrieve the details of a unique asset:
 
 ``` csharp
-var getUniqueAssetResponse = await _test.Client.GetUniqueAsset(trevorId, horseId);
+var getUniqueAssetResponse = await client.GetUniqueAsset(trevorId, horseId);
 ```
 
 The amount of a quantifiable asset is held in something equivalent to an account. When the account is created you can also pass an initial balance if required. In the example below this will create an account that holds 10.00 (remember the scale parameter passed in the creation of the asset type).
 
 ``` csharp
 var accountId = "AccountGBP";
-var newQuantifiableAssetResponse = await _test.Client.CreateQuantifiableAccount(accountId, gbpId, 1000);
+var newQuantifiableAssetResponse = await client.CreateQuantifiableAccount(accountId, gbpId, 1000);
 ``` 
 
 It is also possible to add extra balance to a quantifiable asset. 
 
 ``` csharp
-var result = await _test.Client.AddBalance(accountId, gbpId, 50);
+var result = await client.AddBalance(accountId, gbpId, 50);
 ```
 
 Remebering the scaling, this is effectively creating new assets and adding 0.5 to the balance. In most cases it is likely that a transfer will be used instead to increase the balance of an account.
@@ -137,7 +137,7 @@ Remebering the scaling, this is effectively creating new assets and adding 0.5 t
 It is possible to check the balance of an account:
 
 ``` csharp
-var getQuantifiableAssetResponse = await _test.Client.GetQuantifiableAsset(accountId, gbpId);
+var getQuantifiableAssetResponse = await client.GetQuantifiableAsset(accountId, gbpId);
 ```
 
 ### Transfers
@@ -174,18 +174,25 @@ var response = await client.TransferAssets(transfer);
 It is also possible to do multiple transfers in a single call to the platform. In this example we are going to transfer Trevor back and then transfer 0.01 back the other way. As we are removing assets from two identities both identities need to authorise the transfers.
 
 ``` csharp
-var uniqueTransfer = aliceClient.CreateOwnershipTransfer(trevorId, horseId, alice, client.Identity.Id);
-var quantityTransfer = client.CreateQuantityTransfer(account, aliceAccount, gbpId, 10);
-var transferRequest = new TransferRequest(quantityTransfer, uniqueTransfer)
-    .AddAuthorisation(client.GenerateAuthorisation);
-var body = transferRequest.Body;
+
+var uniqueTransfer = client.CreateOwnershipTransfer(trevorId, horseId, aliceClient.Identity.Id, client.Identity.Id);
+var quantityTransfer = client.CreateQuantityTransfer(accountId, aliceAccount, gbpId, 10);
+var body = new TransfersBody(quantityTransfer, uniqueTransfer);
+var bodyText = body.Serialize();
+var clientAuthorisation = client.GenerateAuthorisation(bodyText);
+            
 // Pass the body to Alice to sign
-var aliceAuthorisations = new TransferRequest(body)
-    .AddAuthorisation(aliceClient.GenerateAuthorisation)
-    .Authorisations.ToArray();
-// Alice now returns her authotisations
-transferRequest.AddAuthorisations(aliceAuthorisations);
-var response = await client.TransferAssets(transferRequest);
+var bruceAuthorisation = aliceClient.Client.GenerateAuthorisation(bodyText);
+
+// Alice now returns her authorisations
+var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
+    new[]
+    {
+        clientAuthorisation,
+        aliceAuthorisation
+    });
+
+var response = await client.Write(transferRequest);
 
 ```
 
@@ -244,6 +251,12 @@ var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
 // This would now be done by the other identity
 var identityAuthorisation = hsbc.Client.GenerateAuthorisation(body);
 var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, body, aliceAuthorisation, identityAuthorisation);
+
+var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
+var identityAuthorisation = client.GenerateAuthorisation(body);
+var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
+var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, identityAuthorisation, aliceAuthorisation);
+
 ```
 
 There are equivalent calls for creating endorsements on assets and asset types.
@@ -287,6 +300,29 @@ var proofIdentity = identityBuilder.Create();
 var proofIdentityResponse = await client.CreateIdentity(proofIdentity);
 var proofResponse = await client.GetProof(proofIdentityResponse.Value.RequestId);
 ```
+
+## Server Hosting
+
+In the case where you need to make calls on behalf of other identities (i.e. you cannot sign things directly as you have no access to the private key) you may want to use different user authorisations and not the ones automatically applied by the simpler API above. In this case there is a PlatformWriteRequest and Write call that will help you achieve this.
+
+Each usage of this follows a pattern:
+- Create the body of the message
+- Create any authorisations
+- Create any authentications (optional)
+- Build the request
+- Pass the request to the Write method
+
+For example:
+
+``` csharp
+var newId = identityBuilder.Create();
+var body = new IssueIdentityBody(newId.Id, new Credentials(newId.Crypto.Pair.PublicKeyBase64String, newId.Crypto.ProtocolId));
+var bodyText = body.Serialize();
+var authorisations = new[] { client.GenerateAuthorisation(bodyText, newId) };
+var authentication = client.GenerateAuthentication(authorisations, newId);
+var request = new PlatformWriteRequest(body.RequestId, bodyText, authorisations, authentication);
+var issueIdentityResponse = await client.Write(request);
+``` 
 
 ## Solution Structure
 

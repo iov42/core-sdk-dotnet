@@ -1,6 +1,6 @@
-﻿namespace Iov42sdk.Models.CreateEndorsements
+﻿namespace Iov42sdk.Models
 {
-    public class CreateEndorsementsResult
+    public class WriteResult
     {
         public string RequestId { get; set; }
         public bool RequestIdReusable { get; set; }

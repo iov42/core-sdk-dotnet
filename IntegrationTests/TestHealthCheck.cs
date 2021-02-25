@@ -13,6 +13,7 @@ namespace IntegrationTests
         {
             using var test = new IntegrationTestCreation();
             var healthStatus = await test.Client.GetHealthStatus();
+
             Assert.IsNotNull(healthStatus);
             Assert.IsTrue(healthStatus.Success);
             var status = healthStatus.Value;

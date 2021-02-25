@@ -1,13 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Iov42sdk.Identity;
 using Iov42sdk.Models;
-using Iov42sdk.Models.AddDelegate;
-using Iov42sdk.Models.CreateAsset;
-using Iov42sdk.Models.CreateAssetType;
 using Iov42sdk.Models.CreateClaims;
-using Iov42sdk.Models.CreateEndorsements;
 using Iov42sdk.Models.GetAsset;
 using Iov42sdk.Models.GetAssetType;
 using Iov42sdk.Models.GetClaim;
@@ -19,10 +16,8 @@ using Iov42sdk.Models.GetProof;
 using Iov42sdk.Models.GetRequestStatus;
 using Iov42sdk.Models.Headers;
 using Iov42sdk.Models.Health;
-using Iov42sdk.Models.IssueIdentity;
 using Iov42sdk.Models.Transactions;
 using Iov42sdk.Models.Transfers;
-using Iov42sdk.Models.UpdateBalance;
 using Iov42sdk.Support;
 
 namespace Iov42sdk.Connection
@@ -63,7 +58,7 @@ namespace Iov42sdk.Connection
         /// Creates a new identity
         /// </summary>
         /// <param name="identity">The identity of the user to create - use IdentityBuilder to create it</param>
-        Task<ResponseResult<CreateIdentityResult>> CreateIdentity(IdentityDetails identity);
+        Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity);
 
         /// <summary>
         /// Fetch the details for an identity
@@ -84,7 +79,7 @@ namespace Iov42sdk.Connection
         /// </summary>
         /// <param name="delegateIdentity">The identity of the delegate</param>
         /// <returns></returns>
-        Task<ResponseResult<AddDelegateResult>> AddDelegate(IdentityDetails delegateIdentity);
+        Task<ResponseResult<WriteResult>> AddDelegate(IdentityDetails delegateIdentity);
 
         /// <summary>
         /// Fetch the delegates for an identity
@@ -98,7 +93,7 @@ namespace Iov42sdk.Connection
         /// </summary>
         /// <param name="assetTypeId">The address to use for the asset type</param>
         /// <returns>The new asset type details</returns>
-        Task<ResponseResult<CreateAssetTypeResult>> CreateUniqueAssetType(string assetTypeId);
+        Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId);
 
         /// <summary>
         /// Create a new quantifiable asset type
@@ -106,7 +101,7 @@ namespace Iov42sdk.Connection
         /// <param name="assetTypeId">The address to use for the asset type</param>
         /// <param name="scale">The scale of the quantities, 2 would be 2 decimal places</param>
         /// <returns>The new asset type details</returns>
-        Task<ResponseResult<CreateAssetTypeResult>> CreateQuantifiableAssetType(string assetTypeId, int scale);
+        Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale);
 
         /// <summary>
         /// Get the unique asset type details
@@ -135,7 +130,7 @@ namespace Iov42sdk.Connection
         /// <param name="address">The address for the instance</param>
         /// <param name="assetTypeAddress">The address of the type of unique asset</param>
         /// <returns>The create asset result</returns>
-        Task<ResponseResult<CreateAssetResult>> CreateUniqueAsset(string address, string assetTypeAddress);
+        Task<ResponseResult<WriteResult>> CreateUniqueAsset(string address, string assetTypeAddress);
 
         /// <summary>
         /// Create a quantity of a quantifiable asset
@@ -144,7 +139,7 @@ namespace Iov42sdk.Connection
         /// <param name="assetTypeAddress">The address of the type of quantifiable asset</param>
         /// <param name="quantity">The amount to create - bear in mind the scale of the asset type definition. If you have a scale of 2dp and you want to create 100 then pass in 10000 (i.e. 100.00). The default is 0.</param>
         /// <returns>The create asset result</returns>
-        Task<ResponseResult<CreateAssetResult>> CreateQuantifiableAccount(string address, string assetTypeAddress, BigInteger quantity = new BigInteger());
+        Task<ResponseResult<WriteResult>> CreateQuantifiableAccount(string address, string assetTypeAddress, BigInteger quantity = new BigInteger());
 
         /// <summary>
         /// Adds a quantity to a quantifiable asset
@@ -153,7 +148,7 @@ namespace Iov42sdk.Connection
         /// <param name="assetTypeAddress">The address of the type of quantifiable asset</param>
         /// <param name="quantity">The amount to add - bear in mind the scale of the asset type definition. If you have a scale of 2dp and you want to create 100 then pass in 10000 (i.e. 100.00)</param>
         /// <returns>The update balance result</returns>
-        Task<ResponseResult<UpdateBalanceResult>> AddBalance(string address, string assetTypeAddress, BigInteger quantity);
+        Task<ResponseResult<WriteResult>> AddBalance(string address, string assetTypeAddress, BigInteger quantity);
 
         /// <summary>
         /// Get the details of the unique asset
@@ -172,18 +167,11 @@ namespace Iov42sdk.Connection
         Task<ResponseResult<QuantifiableAssetResult>> GetQuantifiableAsset(string address, string assetTypeAddress);
 
         /// <summary>
-        /// Transfer one or more assets
-        /// </summary>
-        /// <param name="request">The transfers and authorisations</param>
-        /// <returns>The transfer result</returns>
-        Task<ResponseResult<TransfersResult>> TransferAssets(TransferRequest request);
-
-        /// <summary>
         /// Transfer one or more assets which the current identity owns. If there are other owners involved use the other TransferAssets call
         /// </summary>
         /// <param name="transfers">The transfers</param>
         /// <returns>The transfer result</returns>
-        Task<ResponseResult<TransfersResult>> TransferAssets(params SingleTransfer[] transfers);
+        Task<ResponseResult<WriteResult>> TransferAssets(params SingleTransfer[] transfers);
 
         /// <summary>
         /// Create an ownership transfer (unique asset)
@@ -210,7 +198,7 @@ namespace Iov42sdk.Connection
         /// </summary>
         /// <param name="claims">The claims in plaintext</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateClaimsResult>> CreateIdentityClaims(params string[] claims);
+        Task<ResponseResult<WriteResult>> CreateIdentityClaims(params string[] claims);
 
         /// <summary>
         /// Get the claims for the identity
@@ -257,10 +245,11 @@ namespace Iov42sdk.Connection
         /// Endorses claims on an identity
         /// </summary>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="requestId">The request id</param>
         /// <param name="endorsementBody">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, EndorsementBody endorsementBody, params Authorisation[] authorisations);
+        Task<ResponseResult<WriteResult>> CreateIdentityClaimsEndorsements(Endorsements endorsements, string requestId, string endorsementBody, params Authorisation[] authorisations);
 
         /// <summary>
         /// Create the claims on the asset type
@@ -268,7 +257,7 @@ namespace Iov42sdk.Connection
         /// <param name="assetTypeId">The asset type to claim against</param>
         /// <param name="claims">The claims in plaintext</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateClaimsResult>> CreateAssetTypeClaims(string assetTypeId, params string[] claims);
+        Task<ResponseResult<WriteResult>> CreateAssetTypeClaims(string assetTypeId, params string[] claims);
 
         /// <summary>
         /// Get the claims for the asset type
@@ -291,10 +280,11 @@ namespace Iov42sdk.Connection
         /// Endorses claims on an asset type
         /// </summary>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="requestId">The request id</param>
         /// <param name="body">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations);
+        Task<ResponseResult<WriteResult>> CreateAssetTypeClaimsEndorsements(Endorsements endorsements, string requestId, string body, params Authorisation[] authorisations);
 
         /// <summary>
         /// Get the specific endorsement against the specific claim for an asset type, if it exists
@@ -312,7 +302,7 @@ namespace Iov42sdk.Connection
         /// <param name="assetId">The asset to claim against</param>
         /// <param name="claims">The claims in plaintext</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateClaimsResult>> CreateAssetClaims(string assetTypeId, string assetId, params string[] claims);
+        Task<ResponseResult<WriteResult>> CreateAssetClaims(string assetTypeId, string assetId, params string[] claims);
 
         /// <summary>
         /// Get the claims for the asset
@@ -337,10 +327,11 @@ namespace Iov42sdk.Connection
         /// Endorses claims on an asset
         /// </summary>
         /// <param name="endorsements">The endorsements</param>
+        /// <param name="requestId">The request id</param>
         /// <param name="body">The endorsement body</param>
         /// <param name="authorisations">The authorisations for the endorses and claimant</param>
         /// <returns></returns>
-        Task<ResponseResult<CreateEndorsementsResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, EndorsementBody body, params Authorisation[] authorisations);
+        Task<ResponseResult<WriteResult>> CreateAssetClaimsEndorsements(Endorsements endorsements, string requestId, string body, params Authorisation[] authorisations);
 
         /// <summary>
         /// Get the specific endorsement against the specific claim for an asset, if it exists
@@ -353,12 +344,12 @@ namespace Iov42sdk.Connection
         Task<ResponseResult<EndorsementResult>> GetAssetEndorsement(string assetTypeId, string assetId, string claim, string endorser);
 
         /// <summary>
-        /// Generate the authentication (used for endorsements)
+        /// Generate the authentication
         /// </summary>
-        /// <typeparam name="T">Type of the body to sign</typeparam>
         /// <param name="body">The body to sign</param>
+        /// <param name="identity">The identity to use, or null to use existing identity</param>
         /// <returns></returns>
-        Authorisation GenerateAuthorisation<T>(T body);
+        Authorisation GenerateAuthorisation(string body, IdentityDetails identity = null);
 
         /// <summary>
         /// Create the endorsements container for the identity
@@ -391,5 +382,35 @@ namespace Iov42sdk.Connection
         /// <param name="assetId">The asset</param>
         /// <returns></returns>
         Endorsements CreateAssetEndorsements(string assetTypeId, string assetId);
+
+        /// <summary>
+        /// Perform the write operation
+        /// </summary>
+        /// <param name="request">The request to send</param>
+        Task<ResponseResult<WriteResult>> Write(PlatformWriteRequest request);
+
+        /// <summary>
+        /// Create a request to pass into other calls
+        /// </summary>
+        /// <param name="body">The body</param>
+        /// <param name="authorisationIdentities">The identities to use for authorisation. If none passed it will use the current identity</param>
+        /// <param name="authenticationIdentity">The identity to use for authentication. If none passed it will use the current identity</param>
+        /// <returns></returns>
+        PlatformWriteRequest BuildRequest(WriteBody body, IdentityDetails[] authorisationIdentities = null, IdentityDetails authenticationIdentity = null);
+
+        /// <summary>
+        /// Generate the header for the claims
+        /// </summary>
+        /// <param name="claimMap">The map of claim to hash</param>
+        /// <returns></returns>
+        Dictionary<string, string> GenerateClaimsHeader(Dictionary<string, string> claimMap);
+
+        /// <summary>
+        /// Generate the authorisation header
+        /// </summary>
+        /// <param name="authorisations">The authorisations to sign</param>
+        /// <param name="identity">The identity to use, or null to use existing identity</param>
+        /// <returns></returns>
+        AuthenticationHeader GenerateAuthentication(Authorisation[] authorisations, IdentityDetails identity = null);
     }
 }
