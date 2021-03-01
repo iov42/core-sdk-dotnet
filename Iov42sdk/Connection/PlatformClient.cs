@@ -357,5 +357,21 @@ namespace Iov42sdk.Connection
         {
             return _iovClient.GenerateClaimsHeader(claimMap);
         }
+
+        public bool VerifyIdentityEndorsement(ICrypto crypto, string identityId, string plaintextClaim, string endorsement)
+        {
+            return VerifyAssetEndorsement(crypto, null, identityId, plaintextClaim, endorsement);
+        }
+
+        public bool VerifyAssetTypeEndorsement(ICrypto crypto, string assetType, string plaintextClaim, string endorsement)
+        {
+            return VerifyAssetEndorsement(crypto, null, assetType, plaintextClaim, endorsement);
+        }
+
+        public bool VerifyAssetEndorsement(ICrypto crypto, string assetType, string asset, string plaintextClaim, string endorsement)
+        {
+            var buildClaimContent = Endorsements.BuildClaimContent(crypto, assetType, asset, plaintextClaim);
+            return crypto.VerifySignature(crypto.Pair, endorsement, UsefulConversions.ToBytes(buildClaimContent));
+        }
     }
 }

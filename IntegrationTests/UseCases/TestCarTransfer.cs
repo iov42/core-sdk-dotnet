@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 using BouncyCastleCrypto;
 using IntegrationTests.Support;
 using Iov42sdk.Connection;
+using Iov42sdk.Crypto;
 using Iov42sdk.Identity;
 using Iov42sdk.Models;
+using Iov42sdk.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests.UseCases
@@ -16,7 +18,7 @@ namespace IntegrationTests.UseCases
         public async Task ShouldTransferCar()
         {
             // Create an Identity for Motor Vehicle Authority (MVA). MVA is a imaginary state authority for motor vehicles
-            var identityBuilder = new IdentityBuilder(k => new BouncyCrypto(new EcsdaCryptoEngine()));
+            var identityBuilder = new IdentityBuilder(BuildCrypto);
             var mvaIdentity = identityBuilder.Create(CreateUniqueId("MVA"));
             var mvaClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, mvaIdentity);
             
@@ -61,6 +63,12 @@ namespace IntegrationTests.UseCases
             Assert.IsTrue(getEndorsementResponse.Success);
             Assert.IsNotNull(getEndorsementResponse.Value.Proof);
 
+            // Build the crypto using just the public key of the MVA
+            var key = new BouncyKeyPair(new SerializedKeys().WithPublicKey(mvaIdentity.Crypto.Pair.PublicKeyBase64String));
+            var crypto = BuildCrypto(key);
+            var result = bobClient.VerifyAssetEndorsement(crypto, carType, carId, firstRegistration, getEndorsementResponse.Value.Endorsement);
+            Assert.IsTrue(result);
+
             // (In the real world) Bob is happy with the car and trusts the registration year now - he pays Alice the requested amount of money
 
             // Alice in turn transfers the car instance to Bob
@@ -69,6 +77,11 @@ namespace IntegrationTests.UseCases
             Assert.IsTrue(transferResponse.Success);
 
             // The end - at this point Bob is the owner of the Unique Asset (Alice's Car)
+        }
+
+        private static BouncyCrypto BuildCrypto(IKeyPair k)
+        {
+            return new BouncyCrypto(new EcsdaCryptoEngine(), k as BouncyKeyPair);
         }
 
         /// <summary>

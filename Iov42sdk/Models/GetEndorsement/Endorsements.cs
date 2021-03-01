@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Iov42sdk.Crypto;
 using Iov42sdk.Identity;
 using Iov42sdk.Models.CreateEndorsements;
 using Iov42sdk.Support;
@@ -43,10 +44,16 @@ namespace Iov42sdk.Models.GetEndorsement
         public Endorsements AddEndorsement(string claim)
         {
             var claimHash = _endorser.Crypto.GetHash(claim);
-            var content = SubjectTypeId != null ? $"{SubjectId};{SubjectTypeId};{claimHash}" : $"{SubjectId};{claimHash}";
+            var content = BuildClaimContent(_endorser.Crypto, SubjectTypeId, SubjectId, claim);
             var endorsement = _endorser.Crypto.Sign(content.ToBytes()).ToBase64Url();
             _endorsements.Add(new Endorsement(claim, claimHash, endorsement));
             return this;
+        }
+
+        internal static string BuildClaimContent(ICrypto crypto, string subjectTypeId, string subjectId, string claim)
+        {
+            var claimHash = crypto.GetHash(claim);
+            return subjectTypeId != null ? $"{subjectId};{subjectTypeId};{claimHash}" : $"{subjectId};{claimHash}";
         }
 
         public Endorsements AddEndorsement(string claim, string claimHash, string endorsement)

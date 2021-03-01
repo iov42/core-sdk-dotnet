@@ -236,7 +236,7 @@ var retrievedAssetClaims = await client.GetAssetTypeClaims(horseId, trevorId);
 
 The claims that were created can be endorsed by identities - either the same identity or, more likely, other identities. If another identity is involved then both parties need to sign the endorsement being created. This means there is likely to be an out of band communication to get to the point where the endorsement can be submitted.
 
-The first stage is to create the actual endorsement part of the submission. This involves adding the endorsements to the claim.
+The first stage is to create the actual endorsement part of the submission. This involves adding the endorsements to the claim. Here Alice is endorsing the identity.
 
 ``` csharp
 var endorsements = aliceClient.CreateIdentityEndorsements(client.Identity.Id)
@@ -246,17 +246,23 @@ var endorsements = aliceClient.CreateIdentityEndorsements(client.Identity.Id)
 The main body of the endorsement request is created next and both parties need to sign it. In this case we can just do it one after another however in the real world this is likely to involve serializing the body and the signing and sending it to the other party to sign and submit.
 
 ``` csharp
-var body = endorsements.GenerateIdentityEndorsementBody();
-var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
-// This would now be done by the other identity
-var identityAuthorisation = hsbc.Client.GenerateAuthorisation(body);
-var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, body, aliceAuthorisation, identityAuthorisation);
-
 var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
-var identityAuthorisation = client.GenerateAuthorisation(body);
-var aliceAuthorisation = aliceClient.GenerateAuthorisation(body);
-var endorse = await client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, identityAuthorisation, aliceAuthorisation);
+var aliceHeader = aliceClient.GenerateAuthorisation(body);
 
+// Now the other identity authorizes it
+var header = client.GenerateAuthorisation(body);
+
+// Now send them all together
+var __ = await client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, header, aliceHeader);
+
+// Now fetch it and verify it            
+var endorse = await client.GetIdentityEndorsement(test.Identity.Id, "Some claim", alice.Identity.Id);
+
+// As the client doesn't have access to Alice's private key we need to build something to 
+// verify the key using just the Alice's public key (assuming using BouncyCastle)
+var key = new BouncyKeyPair(new SerializedKeys().WithPublicKey(alice.Identity.Crypto.Pair.PublicKeyBase64String));
+var crypto = new BouncyCrypto(new EcsdaCryptoEngine(), key);
+var result = client.VerifyIdentityEndorsement(crypto, client.Identity.Id, "Some claim", endorse.Value.Endorsement);
 ```
 
 There are equivalent calls for creating endorsements on assets and asset types.

@@ -1,6 +1,7 @@
 ﻿using System;
 using BouncyCastleCrypto;
 using Iov42sdk.Connection;
+using Iov42sdk.Crypto;
 using Iov42sdk.Identity;
 using Iov42sdk.Models;
 using Iov42sdk.Support;
@@ -12,9 +13,14 @@ namespace IntegrationTests.Support
     {
         public IntegrationTestCreation(Func<ICryptoEngine> engine = null)
         {
-            IdentityBuilder = new IdentityBuilder(k => new BouncyCrypto(engine != null ? engine() : new EcsdaCryptoEngine(), k as BouncyKeyPair));
+            IdentityBuilder = new IdentityBuilder(k => CreateCrypto(k, engine));
             Identity = IdentityBuilder.Create();
             Client = ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, Identity).Result;
+        }
+
+        internal static BouncyCrypto CreateCrypto(IKeyPair k, Func<ICryptoEngine> engine = null)
+        {
+            return new BouncyCrypto(engine != null ? engine() : new EcsdaCryptoEngine(), k as BouncyKeyPair);
         }
 
         public IPlatformClient Client { get; }

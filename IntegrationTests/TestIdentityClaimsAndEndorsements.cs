@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BouncyCastleCrypto;
 using IntegrationTests.Support;
 using Iov42sdk;
 using Iov42sdk.Models;
@@ -207,18 +208,18 @@ namespace IntegrationTests
         public async Task ShouldCreateAnIdentityEndorsement()
         {
             using var test = new IntegrationTestCreation();
-            using var hsbc = new IntegrationTestCreation();
+            using var iovBank = new IntegrationTestCreation();
             var birthdayClaim = Guid.NewGuid().ToString();
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var endorsements = hsbc.Client.CreateIdentityEndorsements(test.Identity.Id)
+            var endorsements = iovBank.Client.CreateIdentityEndorsements(test.Identity.Id)
                 .AddEndorsement(birthdayClaim)
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
-            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
+            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -233,20 +234,20 @@ namespace IntegrationTests
         public async Task ShouldFetchEndorsement()
         {
             using var test = new IntegrationTestCreation();
-            using var hsbc = new IntegrationTestCreation();
+            using var iovBank = new IntegrationTestCreation();
             var birthdayClaim = Guid.NewGuid().ToString();
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var endorsements = hsbc.Client.CreateIdentityEndorsements(test.Identity.Id)
+            var endorsements = iovBank.Client.CreateIdentityEndorsements(test.Identity.Id)
                 .AddEndorsement(birthdayClaim)
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
-            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
+            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
-            var endorse = await test.Client.GetIdentityEndorsement(test.Identity.Id, birthdayClaim, hsbc.Identity.Id);
+            var endorse = await test.Client.GetIdentityEndorsement(test.Identity.Id, birthdayClaim, iovBank.Identity.Id);
             
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -254,24 +255,29 @@ namespace IntegrationTests
             Assert.IsTrue(string.IsNullOrEmpty(endorse.Value.DelegateIdentityId));
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.Proof));
             Assert.IsFalse(string.IsNullOrEmpty(endorse.Value.Endorsement));
+
+            var key = new BouncyKeyPair(new SerializedKeys().WithPublicKey(iovBank.Identity.Crypto.Pair.PublicKeyBase64String));
+            var crypto = IntegrationTestCreation.CreateCrypto(key);
+            var result = test.Client.VerifyIdentityEndorsement(crypto, test.Identity.Id, birthdayClaim, endorse.Value.Endorsement);
+            Assert.IsTrue(result);
         }
 
         [TestMethod]
         public async Task ShouldRetrieveEndorsementsOnAClaim()
         {
             using var test = new IntegrationTestCreation();
-            using var hsbc = new IntegrationTestCreation();
+            using var iovBank = new IntegrationTestCreation();
             var birthdayClaim = Guid.NewGuid().ToString();
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var endorsements = hsbc.Client.CreateIdentityEndorsements(test.Identity.Id)
+            var endorsements = iovBank.Client.CreateIdentityEndorsements(test.Identity.Id)
                 .AddEndorsement(birthdayClaim)
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
-            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
+            var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
             var retrievedClaim = await test.Client.GetIdentityClaim(birthdayClaim);
             
@@ -292,17 +298,17 @@ namespace IntegrationTests
         public async Task ShouldCreateAnIdentityEndorsementWithNoPreviousClaim()
         {
             using var test = new IntegrationTestCreation();
-            using var hsbc = new IntegrationTestCreation();
+            using var iovBank = new IntegrationTestCreation();
             var birthdayClaim = Guid.NewGuid().ToString();
             var employerIov42 = Guid.NewGuid().ToString();
 
-            var endorsements = hsbc.Client.CreateIdentityEndorsements(test.Identity.Id)
+            var endorsements = iovBank.Client.CreateIdentityEndorsements(test.Identity.Id)
                 .AddEndorsement(birthdayClaim)
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
-            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, hsbcHeader);
+            var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
+            var endorse = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
 
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -333,20 +339,20 @@ namespace IntegrationTests
         public async Task ShouldCreateAnIdentityEndorsementUsingRequest()
         {
             using var test = new IntegrationTestCreation();
-            using var hsbc = new IntegrationTestCreation();
+            using var iovBank = new IntegrationTestCreation();
             var birthdayClaim = Guid.NewGuid().ToString();
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var endorsements = hsbc.Client.CreateIdentityEndorsements(test.Identity.Id)
+            var endorsements = iovBank.Client.CreateIdentityEndorsements(test.Identity.Id)
                 .AddEndorsement(birthdayClaim)
                 .AddEndorsement(employerIov42);
             var body = endorsements.GenerateIdentityEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
-            var hsbcHeader = hsbc.Client.GenerateAuthorisation(body);
+            var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
             var claimMap = endorsements.GetClaims();
             var claimsHeader = test.Client.GenerateClaimsHeader(claimMap);
-            var request = new PlatformWriteRequest(endorsements.RequestId, body, new [] { testHeader, hsbcHeader }).WithAdditionalHeaders(claimsHeader);
+            var request = new PlatformWriteRequest(endorsements.RequestId, body, new [] { testHeader, iovBankHeader }).WithAdditionalHeaders(claimsHeader);
             var endorse = await test.Client.Write(request);
             endorse.VerifyWriteResult(2);
         }

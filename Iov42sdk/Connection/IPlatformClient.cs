@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using Iov42sdk.Crypto;
 using Iov42sdk.Identity;
 using Iov42sdk.Models;
 using Iov42sdk.Models.CreateClaims;
@@ -412,5 +413,36 @@ namespace Iov42sdk.Connection
         /// <param name="identity">The identity to use, or null to use existing identity</param>
         /// <returns></returns>
         AuthenticationHeader GenerateAuthentication(Authorisation[] authorisations, IdentityDetails identity = null);
+
+        /// <summary>
+        /// Verify the endorsement of the identity claim
+        /// </summary>
+        /// <param name="crypto">An instance of crypto created with the public key of the endorser</param>
+        /// <param name="identityId">The identity that was endorsed</param>
+        /// <param name="plaintextClaim">The plaintext of the claim</param>
+        /// <param name="endorsement">The endorsement text returned from the request</param>
+        /// <returns>True if the signature matches</returns>
+        bool VerifyIdentityEndorsement(ICrypto crypto, string identityId, string plaintextClaim, string endorsement);
+
+        /// <summary>
+        /// Verify the endorsement of the asset claim
+        /// </summary>
+        /// <param name="crypto">An instance of crypto created with the public key of the endorser</param>
+        /// <param name="assetType">The asset type that was endorsed</param>
+        /// <param name="plaintextClaim">The plaintext of the claim</param>
+        /// <param name="endorsement">The endorsement text returned from the request</param>
+        /// <returns>True if the signature matches</returns>
+        bool VerifyAssetTypeEndorsement(ICrypto crypto, string assetType, string plaintextClaim, string endorsement);
+
+        /// <summary>
+        /// Verify the endorsement of the asset type claim
+        /// </summary>
+        /// <param name="crypto">An instance of crypto created with the public key of the endorser</param>
+        /// <param name="assetType">The asset type for the endorsement (e.g. horse)</param>
+        /// <param name="asset">The asset of the endorsement (e.g. Trevor)</param>
+        /// <param name="plaintextClaim">The plaintext of the claim</param>
+        /// <param name="endorsement">The endorsement text returned from the request</param>
+        /// <returns>True if the signature matches</returns>
+        bool VerifyAssetEndorsement(ICrypto crypto, string assetType, string asset, string plaintextClaim, string endorsement);
     }
 }
