@@ -6,7 +6,15 @@ Below you can find instructions on how to use this library. For additional infor
 
 ## Installation
 
-The simplest way to use the library is to clone the repository and then load it into Visual Studio (Community Edition or higher). You can also use Visual Studio Code with the correct extensions.
+The simplest way to use the library is to clone the repository and then load it into Visual Studio (Community Edition or higher). 
+
+For Visual Studio Code, install the .NET Core SDK 3.1 from https://dotnet.microsoft.com/download/dotnet/3.1. In Visual Studio Code, load the root folder and then open a terminal window. Type:
+
+_dotnet build_
+
+Once built, change to the IntegrationTests folder and type:
+
+_dotnet test_
 
 ## Running the tests
 
