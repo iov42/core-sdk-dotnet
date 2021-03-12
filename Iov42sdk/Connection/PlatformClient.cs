@@ -31,6 +31,7 @@ namespace Iov42sdk.Connection
 {
     public class PlatformClient : IPlatformClient
     {
+        private const string ApiLocation = "/api/v1/";
         private readonly Uri _baseUrl;
         private IdentityDetails _identity;
         private readonly IovClient _iovClient;
@@ -39,7 +40,7 @@ namespace Iov42sdk.Connection
         // Use ClientBuilder to create an instance
         internal PlatformClient(string baseUrl)
         {
-            _baseUrl = new Uri(baseUrl);
+            _baseUrl = new Uri(new Uri(baseUrl), ApiLocation);
             _iovClient = new IovClient(_baseUrl);
         }
 
