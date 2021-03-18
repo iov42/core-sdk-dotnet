@@ -1,3 +1,9 @@
+# Version 1.0.0.3
+18th March 2021
+
+- Fixed local package references
+
+
 # Version 1.0.0.2
 12th March 2021
 
