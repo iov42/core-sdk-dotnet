@@ -2,7 +2,7 @@
 {
     public class SupportedProtocols
     {
-        public static readonly string Sha256WithRsa = "SHA256WithRSA";
-        public static readonly string Sha256WithEcdsa = "SHA256WithECDSA";
+        public const string Sha256WithRsa = "SHA256WithRSA";
+        public const string Sha256WithEcdsa = "SHA256WithECDSA";
     }
 }
