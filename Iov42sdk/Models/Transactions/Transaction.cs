@@ -2,10 +2,14 @@
 {
     public class Transaction
     {
+        internal Transaction(CombinedTransaction transaction)
+        {
+            RequestId = transaction.RequestId;
+            TransactionTimestamp = transaction.TransactionTimestamp;
+            Proof = transaction.Proof;
+        }
+
         public string RequestId { get; set; }
-        public Participant Sender { get; set; }
-        public Participant Recipient { get; set; }
-        public string Quantity { get; set; }
         public string TransactionTimestamp { get; set; }
         public string Proof { get; set; }
     }

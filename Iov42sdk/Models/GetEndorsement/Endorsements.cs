@@ -39,7 +39,7 @@ namespace Iov42sdk.Models.GetEndorsement
         public string EndorserId { get; }
         public string RequestId { get; }
 
-        public IEnumerable<Endorsement> AllEndorsements => _endorsements;
+        public IEnumerable<Endorsement> AllEndorsements => _endorsements.ToArray();
 
         public Endorsements AddEndorsement(string claim)
         {

@@ -35,10 +35,15 @@ namespace IntegrationTests.UseCases
             var bobIdentity = identityBuilder.Create(CreateUniqueId("Bob"));
             var bobClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, bobIdentity);
 
-            // Alice creates an instance of a car AssetType
+            // MVA registers an instance of a car AssetType
             var carId = CreateUniqueId("ACar");
-            var carResponse = await aliceClient.CreateUniqueAsset(carId, carType);
+            var carResponse = await mvaClient.CreateUniqueAsset(carId, carType);
             Assert.IsTrue(carResponse.Success);
+
+            // Car is transferred to Alice
+            var transfer = mvaClient.CreateOwnershipTransfer(carId, carType, mvaIdentity.Id, aliceIdentity.Id);
+            var transferResponse = await mvaClient.TransferAssets(transfer);
+            Assert.IsTrue(transferResponse.Success);
 
             // Alice claims the first registration of the car happened in 2010
             var firstRegistration = "first-registration:10/02/2010";
@@ -72,8 +77,8 @@ namespace IntegrationTests.UseCases
             // (In the real world) Bob is happy with the car and trusts the registration year now - he pays Alice the requested amount of money
 
             // Alice in turn transfers the car instance to Bob
-            var transfer = aliceClient.CreateOwnershipTransfer(carId, carType, aliceIdentity.Id, bobIdentity.Id);
-            var transferResponse = await aliceClient.TransferAssets(transfer);
+            transfer = aliceClient.CreateOwnershipTransfer(carId, carType, aliceIdentity.Id, bobIdentity.Id);
+            transferResponse = await aliceClient.TransferAssets(transfer);
             Assert.IsTrue(transferResponse.Success);
 
             // The end - at this point Bob is the owner of the Unique Asset (Alice's Car)

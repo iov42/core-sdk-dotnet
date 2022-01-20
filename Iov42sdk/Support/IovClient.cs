@@ -88,7 +88,10 @@ namespace Iov42sdk.Support
         private string BuildSignedGetAuthentication(string url)
         {
             var encodedGetSignature = _identity.Crypto.Sign(url.ToBytes()).ToBase64Url();
-            var authentication = new AuthenticationHeader(_identity.Crypto.ProtocolId, _identity.Id, encodedGetSignature);
+            var authentication = _delegatorId != null
+                ? new AuthenticationHeader(_identity.Crypto.ProtocolId, _delegatorId, encodedGetSignature, _identity.Id)
+                : new AuthenticationHeader(_identity.Crypto.ProtocolId, _identity.Id, encodedGetSignature);
+
             var authenticationJson = _json.ConvertFrom(authentication);
             var encodedAuthenticationJsonForGet = authenticationJson.ToBase64Url();
             return encodedAuthenticationJsonForGet;

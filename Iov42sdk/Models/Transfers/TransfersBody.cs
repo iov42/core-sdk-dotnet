@@ -1,4 +1,6 @@
-﻿namespace Iov42sdk.Models.Transfers
+﻿using System;
+
+namespace Iov42sdk.Models.Transfers
 {
     public class TransfersBody : WriteBody
     {
@@ -7,7 +9,7 @@
         public TransfersBody() 
             : base(NodeConstants.TransfersRequestType)
         {
-            Transfers = new SingleTransfer[0];
+            Transfers = Array.Empty<SingleTransfer>();
         }
 
         public TransfersBody(params SingleTransfer[] transfers)

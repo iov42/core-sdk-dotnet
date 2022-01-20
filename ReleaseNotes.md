@@ -1,3 +1,9 @@
+# Version 1.0.0.5
+20th January 2022
+
+- Fixed using delegates for "GET" operations
+- Updated tests to take into account default permissions for creating assets
+
 # Version 1.0.0.4
 24th March 2021
 

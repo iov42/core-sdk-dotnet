@@ -328,7 +328,10 @@ namespace Iov42sdk.Connection
         {
             var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeId, NodeConstants.AssetsEndPoint, assetId, NodeConstants.TransactionsEndPoint)
                 .WithPagingParameters(limit, next);
-            return await _iovClient.ProcessSignedGetRequest<TransactionsResult>(request.Path);
+            var transactions = await _iovClient.ProcessSignedGetRequest<CombinedTransactionsResult>(request.Path);
+            var expanded = transactions.Value.Transactions.Select(x => string.IsNullOrEmpty(x.Quantity) ? (Transaction)new UniqueTransaction(x) : new QuantifiableTransaction(x)).ToArray();
+            var processed = new TransactionsResult { Next = transactions.Value.Next, Transactions = expanded };
+            return new ResponseResult<TransactionsResult>(processed, transactions.Success, transactions.ResponseCode, transactions.Reason);
         }
 
         public Authorisation GenerateAuthorisation(string body, IdentityDetails identity = null)
