@@ -2,9 +2,7 @@
 using System.Threading.Tasks;
 using IntegrationTests.Support;
 using Iov42sdk.Connection;
-using Iov42sdk.Models;
 using Iov42sdk.Models.Transactions;
-using Iov42sdk.Models.Transfers;
 using Iov42sdk.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,15 +44,9 @@ namespace IntegrationTests
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
             
-            var quantityTransfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var body = new TransfersBody(quantityTransfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText),
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
@@ -81,15 +73,9 @@ namespace IntegrationTests
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
             
-            var quantityTransfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var body = new TransfersBody(quantityTransfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText),
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
@@ -109,15 +95,10 @@ namespace IntegrationTests
             Assert.IsTrue(writeResult.Success);
             
             var bruceClient = new IntegrationTestCreation();
-            var uniqueTransfer = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id);
-            var body = new TransfersBody(uniqueTransfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText),
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
+
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
@@ -137,15 +118,9 @@ namespace IntegrationTests
             Assert.IsTrue(writeResult.Success);
             
             var bruceClient = new IntegrationTestCreation();
-            var uniqueTransfer = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id);
-            var body = new TransfersBody(uniqueTransfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText),
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
@@ -171,17 +146,11 @@ namespace IntegrationTests
             var bruceAccount = bruceClient.CreateUniqueId("AccountGBP");
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
-            
-            var quantity1Transfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 5);
-            var quantity2Transfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var body = new TransfersBody(quantity1Transfer, quantity2Transfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText),
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
+
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddQuantityTransfer(account, bruceAccount, gbpId, 5)
+                .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
@@ -205,27 +174,15 @@ namespace IntegrationTests
 
             var bruceClient = new IntegrationTestCreation();
             
-            var uniqueTransfer1 = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id);
-            var body = new TransfersBody(uniqueTransfer1);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    _test.Client.GenerateAuthorisation(bodyText)
-                });
-
+            var transferRequest = new TradeBuilder(_test.Client)
+                .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
-            var uniqueTransfer2 = bruceClient.Client.CreateOwnershipTransfer(trevorId, horseId, bruceClient.Identity.Id, _test.Identity.Id);
-            body = new TransfersBody(uniqueTransfer2);
-            bodyText = body.Serialize();
-            transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    bruceClient.Client.GenerateAuthorisation(bodyText)
-                });
-
+            transferRequest = new TradeBuilder(bruceClient.Client)
+                .AddOwnershipTransfer(trevorId, horseId, bruceClient.Identity.Id, _test.Identity.Id)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
@@ -270,14 +227,10 @@ namespace IntegrationTests
             writeResult = await delegateClient1.CreateQuantifiableAccount(accountB, gbpId);
             Assert.IsTrue(writeResult.Success);
 
-            var quantity1Transfer = delegateClient1.CreateQuantityTransfer(accountA, accountB, gbpId, 3);
-            var body = new TransfersBody(quantity1Transfer);
-            var bodyText = body.Serialize();
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    delegateClient1.GenerateAuthorisation(bodyText)
-                });
+
+            var transferRequest = new TradeBuilder(delegateClient1)
+                .AddQuantityTransfer(accountA, accountB, gbpId, 3)
+                .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 

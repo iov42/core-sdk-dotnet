@@ -20,7 +20,7 @@ namespace Iov42sdk.Support
             var now = DateTime.UtcNow;
             // Save the best estimate when persistence will be complete - crudely scaled
             // based on how long the last write operation took
-            _lastWriteLimit = now.AddMilliseconds(now.Subtract(_start).Milliseconds * 2);
+            _lastWriteLimit = now.AddMilliseconds(now.Subtract(_start).TotalMilliseconds * 2);
         }
 
         public async Task ReadOperation()

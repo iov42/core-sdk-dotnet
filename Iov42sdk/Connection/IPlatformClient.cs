@@ -168,33 +168,6 @@ namespace Iov42sdk.Connection
         Task<ResponseResult<QuantifiableAssetResult>> GetQuantifiableAsset(string address, string assetTypeAddress);
 
         /// <summary>
-        /// Transfer one or more assets which the current identity owns. If there are other owners involved use the other TransferAssets call
-        /// </summary>
-        /// <param name="transfers">The transfers</param>
-        /// <returns>The transfer result</returns>
-        Task<ResponseResult<WriteResult>> TransferAssets(params SingleTransfer[] transfers);
-
-        /// <summary>
-        /// Create an ownership transfer (unique asset)
-        /// </summary>
-        /// <param name="assetId">The asset id to transfer</param>
-        /// <param name="assetTypeId">The type of asset to transder</param>
-        /// <param name="fromIdentityId">Who it is transferring from</param>
-        /// <param name="toIdentityId">Who it is transferring to</param>
-        /// <returns>The transfer</returns>
-        SingleTransfer CreateOwnershipTransfer(string assetId, string assetTypeId, string fromIdentityId, string toIdentityId);
-
-        /// <summary>
-        /// Create a quantity transfer
-        /// </summary>
-        /// <param name="fromAssetId">The from account</param>
-        /// <param name="toAssetId">The to account</param>
-        /// <param name="assetTypeId">The asset type in the account</param>
-        /// <param name="quantity">The quantity to transfer</param>
-        /// <returns>The transfer</returns>
-        SingleTransfer CreateQuantityTransfer(string fromAssetId, string toAssetId, string assetTypeId, BigInteger quantity);
-
-        /// <summary>
         /// Create the claims on the identity
         /// </summary>
         /// <param name="claims">The claims in plaintext</param>

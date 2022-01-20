@@ -160,8 +160,10 @@ var _ = await client.CreateIdentity(alice);
 We next have to create the actual transfer to perform and then send it to the platform. This transfer will be of Trever from the current identity (held in client) to our new identity, Alice.
 
 ``` csharp
-var transfer = client.CreateOwnershipTransfer(trevorId, horseId, client.Identity.Id, alice.Id);
-var response = await _test.Client.TransferAssets(transfer);
+var request = new TradeBuilder(client)
+    .AddOwnershipTransfer(trevorId, horseId, client.Identity.Id, alice.Id)
+    .Build();
+var response = await _test.Client.Write(request);
 ```
 
 For the transfer of some quantifiable asset we have to do a little more work. We need an account to transfer the assets into so we will need to set that up first - if the account already exists you won't need to do this step.
@@ -175,8 +177,10 @@ var _ = await aliceClient.CreateQuantifiableAccount(aliceAccount, gbpId);
 Now there is an account we can transfer the assets using the original client (as the identity associated with that client currently owns the assets):
 
 ``` csharp
-var transfer = client.CreateQuantityTransfer(accountId, aliceAccount, gbpId, 100);
-var response = await client.TransferAssets(transfer);
+var request = new TradeBuilder(client)
+    .AddQuantityTransfer(accountId, aliceAccount, gbpId, 100)
+    .Build();
+var response = await _test.Client.Write(request);
 ```
 
 It is also possible to do multiple transfers in a single call to the platform. In this example we are going to transfer Trevor back and then transfer 0.01 back the other way. As we are removing assets from two identities both identities need to authorise the transfers.
@@ -185,23 +189,14 @@ It is also possible to do multiple transfers in a single call to the platform. I
 
 var uniqueTransfer = client.CreateOwnershipTransfer(trevorId, horseId, aliceClient.Identity.Id, client.Identity.Id);
 var quantityTransfer = client.CreateQuantityTransfer(accountId, aliceAccount, gbpId, 10);
-var body = new TransfersBody(quantityTransfer, uniqueTransfer);
-var bodyText = body.Serialize();
-var clientAuthorisation = client.GenerateAuthorisation(bodyText);
-            
-// Pass the body to Alice to sign
-var bruceAuthorisation = aliceClient.Client.GenerateAuthorisation(bodyText);
-
-// Alice now returns her authorisations
-var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-    new[]
-    {
-        clientAuthorisation,
-        aliceAuthorisation
-    });
-
-var response = await client.Write(transferRequest);
-
+var tradeAuthorisations = new TradeBuilder(client)
+    .AddOwnershipTransfer(trevorId, horseId, aliceClient.Identity.Id, client.Identity.Id)
+    .AddQuantityTransfer(accountId, aliceAccount, gbpId, 10)
+    .Build();
+// Pass it to Alice to sign and submit
+var request = new TradeBuilder(aliceClient.Client, tradeAuthorisations)
+    .Build();
+var response = await _test.Client.Write(request);
 ```
 
 ### Claims

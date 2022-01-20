@@ -183,24 +183,7 @@ namespace Iov42sdk.Connection
             var request = _getBuilder.Create(NodeConstants.AssetTypesEndPoint, assetTypeAddress, NodeConstants.AssetsEndPoint, address);
             return await _iovClient.ProcessSignedGetRequest<QuantifiableAssetResult>(request.Path);
         }
-
-        public async Task<ResponseResult<WriteResult>> TransferAssets(params SingleTransfer[] transfers)
-        {
-            var body = new TransfersBody(transfers);
-            var request = BuildRequest(body, new[] {_identity}, _identity);
-            return await Write(request);
-        }
-
-        public SingleTransfer CreateOwnershipTransfer(string assetId, string assetTypeId, string fromIdentityId, string toIdentityId)
-        {
-            return new TransferOwnership(assetId, assetTypeId, fromIdentityId, toIdentityId);
-        }
-
-        public SingleTransfer CreateQuantityTransfer(string fromAssetId, string toAssetId, string assetTypeId, BigInteger quantity)
-        {
-            return new TransferQuantity(fromAssetId, toAssetId, assetTypeId, quantity.ToString());
-        }
-
+        
         public async Task<ResponseResult<NodeInfo>> GetNodeInfo()
         {
             return await _iovClient.ProcessSimpleGetRequest<NodeInfo>(NodeConstants.NodeInfoEndPoint);

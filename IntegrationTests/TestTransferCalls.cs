@@ -1,7 +1,5 @@
 using System.Threading.Tasks;
 using IntegrationTests.Support;
-using Iov42sdk.Models;
-using Iov42sdk.Models.Transfers;
 using Iov42sdk.Support;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,8 +34,10 @@ namespace IntegrationTests
             var bruce = _test.IdentityBuilder.Create();
             var __ = await _test.Client.CreateIdentity(bruce);
             
-            var transfer = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruce.Id);
-            var response = await _test.Client.TransferAssets(transfer);
+            var request = new TradeBuilder(_test.Client)
+                .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruce.Id)
+                .Build();
+            var response = await _test.Client.Write(request);
             
             Assert.IsTrue(response.Success);
             Assert.IsNotNull(response.Value.RequestId);
@@ -62,9 +62,12 @@ namespace IntegrationTests
             var bruceAccount = bruceClient.CreateUniqueId("AccountGBP");
             await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             
-            var transfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var response = await _test.Client.TransferAssets(transfer);
-            
+
+            var request = new TradeBuilder(_test.Client)
+                .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
+                .Build();
+            var response = await _test.Client.Write(request);
+
             Assert.IsTrue(response.Success);
             Assert.IsNotNull(response.Value.RequestId);
             Assert.IsNotNull(response.Value.Proof);
@@ -94,24 +97,15 @@ namespace IntegrationTests
             var bruceAccount = bruceClient.CreateUniqueId("AccountGBP");
             await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             
-            var uniqueTransfer = _test.Client.CreateOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id);
-            var quantityTransfer = _test.Client.CreateQuantityTransfer(account, bruceAccount, gbpId, 10);
-            var body = new TransfersBody(quantityTransfer, uniqueTransfer);
-            var bodyText = body.Serialize();
-            var clientAuthorisation = _test.Client.GenerateAuthorisation(bodyText);
-            
-            // Pass the body to Bruce to sign
-            var bruceAuthorisation = bruceClient.Client.GenerateAuthorisation(bodyText);
 
-            // Bruce now returns his authorisations
-            var transferRequest = new PlatformWriteRequest(body.RequestId, bodyText,
-                new[]
-                {
-                    clientAuthorisation,
-                    bruceAuthorisation
-                });
-
-            var response = await _test.Client.Write(transferRequest);
+            var authorisations = new TradeBuilder(_test.Client)
+                .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
+                .AddQuantityTransfer(bruceAccount, account, gbpId, 10)
+                .GenerateAuthorisations();
+            // Pass it to Bruce to sign
+            var request = new TradeBuilder(bruceClient.Client, authorisations)
+                .Build();
+            var response = await bruceClient.Client.Write(request);
             response.VerifyWriteResult(3);
         }
     }

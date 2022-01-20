@@ -41,8 +41,10 @@ namespace IntegrationTests.UseCases
             Assert.IsTrue(carResponse.Success);
 
             // Car is transferred to Alice
-            var transfer = mvaClient.CreateOwnershipTransfer(carId, carType, mvaIdentity.Id, aliceIdentity.Id);
-            var transferResponse = await mvaClient.TransferAssets(transfer);
+            var request = new TradeBuilder(mvaClient)
+                .AddOwnershipTransfer(carId, carType, mvaIdentity.Id, aliceIdentity.Id)
+                .Build();
+            var transferResponse = await mvaClient.Write(request);
             Assert.IsTrue(transferResponse.Success);
 
             // Alice claims the first registration of the car happened in 2010
@@ -77,8 +79,10 @@ namespace IntegrationTests.UseCases
             // (In the real world) Bob is happy with the car and trusts the registration year now - he pays Alice the requested amount of money
 
             // Alice in turn transfers the car instance to Bob
-            transfer = aliceClient.CreateOwnershipTransfer(carId, carType, aliceIdentity.Id, bobIdentity.Id);
-            transferResponse = await aliceClient.TransferAssets(transfer);
+            request = new TradeBuilder(aliceClient)
+                .AddOwnershipTransfer(carId, carType, aliceIdentity.Id, bobIdentity.Id)
+                .Build();
+            transferResponse = await aliceClient.Write(request);
             Assert.IsTrue(transferResponse.Success);
 
             // The end - at this point Bob is the owner of the Unique Asset (Alice's Car)
