@@ -160,7 +160,7 @@ var _ = await client.CreateIdentity(alice);
 We next have to create the actual transfer to perform and then send it to the platform. This transfer will be of Trever from the current identity (held in client) to our new identity, Alice.
 
 ``` csharp
-var request = new TradeBuilder(client)
+var request = new TransferBuilder(client)
     .AddOwnershipTransfer(trevorId, horseId, client.Identity.Id, alice.Id)
     .Build();
 var response = await _test.Client.Write(request);
@@ -177,7 +177,7 @@ var _ = await aliceClient.CreateQuantifiableAccount(aliceAccount, gbpId);
 Now there is an account we can transfer the assets using the original client (as the identity associated with that client currently owns the assets):
 
 ``` csharp
-var request = new TradeBuilder(client)
+var request = new TransferBuilder(client)
     .AddQuantityTransfer(accountId, aliceAccount, gbpId, 100)
     .Build();
 var response = await _test.Client.Write(request);
@@ -189,12 +189,12 @@ It is also possible to do multiple transfers in a single call to the platform. I
 
 var uniqueTransfer = client.CreateOwnershipTransfer(trevorId, horseId, aliceClient.Identity.Id, client.Identity.Id);
 var quantityTransfer = client.CreateQuantityTransfer(accountId, aliceAccount, gbpId, 10);
-var tradeAuthorisations = new TradeBuilder(client)
+var transferAuthorisations = new TransferBuilder(client)
     .AddOwnershipTransfer(trevorId, horseId, aliceClient.Identity.Id, client.Identity.Id)
     .AddQuantityTransfer(accountId, aliceAccount, gbpId, 10)
     .Build();
 // Pass it to Alice to sign and submit
-var request = new TradeBuilder(aliceClient.Client, tradeAuthorisations)
+var request = new TransferBuilder(aliceClient.Client, transferAuthorisations)
     .Build();
 var response = await _test.Client.Write(request);
 ```

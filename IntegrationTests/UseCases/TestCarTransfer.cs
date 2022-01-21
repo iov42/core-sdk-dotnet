@@ -41,7 +41,7 @@ namespace IntegrationTests.UseCases
             Assert.IsTrue(carResponse.Success);
 
             // Car is transferred to Alice
-            var request = new TradeBuilder(mvaClient)
+            var request = new TransferBuilder(mvaClient)
                 .AddOwnershipTransfer(carId, carType, mvaIdentity.Id, aliceIdentity.Id)
                 .Build();
             var transferResponse = await mvaClient.Write(request);
@@ -79,7 +79,7 @@ namespace IntegrationTests.UseCases
             // (In the real world) Bob is happy with the car and trusts the registration year now - he pays Alice the requested amount of money
 
             // Alice in turn transfers the car instance to Bob
-            request = new TradeBuilder(aliceClient)
+            request = new TransferBuilder(aliceClient)
                 .AddOwnershipTransfer(carId, carType, aliceIdentity.Id, bobIdentity.Id)
                 .Build();
             transferResponse = await aliceClient.Write(request);

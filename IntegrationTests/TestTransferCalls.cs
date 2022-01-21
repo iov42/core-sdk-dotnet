@@ -34,7 +34,7 @@ namespace IntegrationTests
             var bruce = _test.IdentityBuilder.Create();
             var __ = await _test.Client.CreateIdentity(bruce);
             
-            var request = new TradeBuilder(_test.Client)
+            var request = new TransferBuilder(_test.Client)
                 .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruce.Id)
                 .Build();
             var response = await _test.Client.Write(request);
@@ -63,7 +63,7 @@ namespace IntegrationTests
             await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             
 
-            var request = new TradeBuilder(_test.Client)
+            var request = new TransferBuilder(_test.Client)
                 .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
                 .Build();
             var response = await _test.Client.Write(request);
@@ -98,12 +98,12 @@ namespace IntegrationTests
             await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             
 
-            var authorisations = new TradeBuilder(_test.Client)
+            var authorisations = new TransferBuilder(_test.Client)
                 .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
                 .AddQuantityTransfer(bruceAccount, account, gbpId, 10)
                 .GenerateAuthorisations();
             // Pass it to Bruce to sign
-            var request = new TradeBuilder(bruceClient.Client, authorisations)
+            var request = new TransferBuilder(bruceClient.Client, authorisations)
                 .Build();
             var response = await bruceClient.Client.Write(request);
             response.VerifyWriteResult(3);

@@ -44,7 +44,7 @@ namespace IntegrationTests
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
             
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
@@ -73,7 +73,7 @@ namespace IntegrationTests
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
             
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
@@ -96,7 +96,7 @@ namespace IntegrationTests
             
             var bruceClient = new IntegrationTestCreation();
 
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
@@ -118,7 +118,7 @@ namespace IntegrationTests
             Assert.IsTrue(writeResult.Success);
             
             var bruceClient = new IntegrationTestCreation();
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
@@ -147,7 +147,7 @@ namespace IntegrationTests
             writeResult = await bruceClient.Client.CreateQuantifiableAccount(bruceAccount, gbpId, 1000);
             Assert.IsTrue(writeResult.Success);
 
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddQuantityTransfer(account, bruceAccount, gbpId, 5)
                 .AddQuantityTransfer(account, bruceAccount, gbpId, 10)
                 .Build();
@@ -174,13 +174,13 @@ namespace IntegrationTests
 
             var bruceClient = new IntegrationTestCreation();
             
-            var transferRequest = new TradeBuilder(_test.Client)
+            var transferRequest = new TransferBuilder(_test.Client)
                 .AddOwnershipTransfer(trevorId, horseId, _test.Identity.Id, bruceClient.Identity.Id)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
-            transferRequest = new TradeBuilder(bruceClient.Client)
+            transferRequest = new TransferBuilder(bruceClient.Client)
                 .AddOwnershipTransfer(trevorId, horseId, bruceClient.Identity.Id, _test.Identity.Id)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
@@ -228,7 +228,7 @@ namespace IntegrationTests
             Assert.IsTrue(writeResult.Success);
 
 
-            var transferRequest = new TradeBuilder(delegateClient1)
+            var transferRequest = new TransferBuilder(delegateClient1)
                 .AddQuantityTransfer(accountA, accountB, gbpId, 3)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);

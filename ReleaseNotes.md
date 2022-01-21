@@ -1,7 +1,7 @@
 # Version 1.0.0.5
-20th January 2022
+21st January 2022
 
-- Introduced TradeBuilder to simplify trade request creation
+- Introduced TransferBuilder to simplify transfer request creation
 - Fixed using delegates for "GET" operations
 - Updated tests to take into account default permissions for creating assets
 
