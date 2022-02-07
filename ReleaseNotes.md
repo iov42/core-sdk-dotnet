@@ -1,3 +1,9 @@
+# Version 1.0.0.6
+7th February 2022
+
+- Improved the redirect handling to not assume a GET endpoint on the redirect
+
+
 # Version 1.0.0.5
 21st January 2022
 

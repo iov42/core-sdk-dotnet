@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -135,18 +136,34 @@ namespace Iov42sdk.Support
 
         private static async Task<HttpRequestMessage> BuildRedirectRequest(HttpRequestMessage request, HttpResponseMessage response)
         {
-            var redirectUri = response.Headers.Location;
-            if (!redirectUri.IsAbsoluteUri)
-                redirectUri = new Uri(request.RequestUri.GetLeftPart(UriPartial.Authority) + redirectUri);
-            var redirect = new HttpRequestMessage(HttpMethod.Get, redirectUri);
+            // Need to handle the retry-after - hence this code. Have to clone the request as we can't just resubmit it
+            var copy = await CloneHttpRequestMessageAsync(request);
             if (!response.Headers.TryGetValues(RetryAfter, out var values)) 
-                return redirect;
+                return copy;
             var retry = values as string[] ?? values.ToArray();
-            if (retry.Length != 1) 
-                return redirect;
-            var millisecondsDelay = Convert.ToInt32(retry.ElementAt(0)) * 1000;
-            await Task.Delay(millisecondsDelay);
-            return redirect;
+            if (retry.Length == 1 && int.TryParse(retry.ElementAt(0), out var millisecondsDelay)) 
+                await Task.Delay(millisecondsDelay * 1000);
+            return copy;
+        }
+
+        public static async Task<HttpRequestMessage> CloneHttpRequestMessageAsync(HttpRequestMessage req)
+        {
+            var clone = new HttpRequestMessage(req.Method, req.RequestUri);
+            var memoryStream = new MemoryStream();
+            if (req.Content != null)
+            {
+                await req.Content.CopyToAsync(memoryStream).ConfigureAwait(false);
+                memoryStream.Position = 0;
+                clone.Content = new StreamContent(memoryStream);
+                foreach (var h in req.Content.Headers)
+                    clone.Content.Headers.Add(h.Key, h.Value);
+            }
+            clone.Version = req.Version;
+            foreach (var prop in req.Properties)
+                clone.Properties.Add(prop);
+            foreach (var header in req.Headers)
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            return clone;
         }
 
         internal Authorisation GenerateAuthorisationHeader(string body, IdentityDetails identity)
