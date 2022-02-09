@@ -18,12 +18,10 @@ using Iov42sdk.Models.GetEndorsement;
 using Iov42sdk.Models.GetIdentity;
 using Iov42sdk.Models.GetIdentityPublicKey;
 using Iov42sdk.Models.GetProof;
-using Iov42sdk.Models.GetRequestStatus;
 using Iov42sdk.Models.Headers;
 using Iov42sdk.Models.Health;
 using Iov42sdk.Models.IssueIdentity;
 using Iov42sdk.Models.Transactions;
-using Iov42sdk.Models.Transfers;
 using Iov42sdk.Models.UpdateBalance;
 using Iov42sdk.Support;
 
@@ -68,12 +66,6 @@ namespace Iov42sdk.Connection
         {
             var request = _getBuilder.CreateUnsigned(NodeConstants.HealthChecksEndPoint);
             return await _iovClient.ProcessSimpleGetRequest<HealthStatusResult>(request.Path);
-        }
-
-        public async Task<ResponseResult<RequestStatusResult>> GetRequestStatus(string requestId)
-        {
-            var request = _getBuilder.CreateUnsigned(NodeConstants.RequestsEndPoint, requestId);
-            return await _iovClient.ProcessSimpleGetRequest<RequestStatusResult>(request.Path);
         }
 
         public async Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity)

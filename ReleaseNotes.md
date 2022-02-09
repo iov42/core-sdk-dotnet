@@ -1,3 +1,9 @@
+# Version 1.0.0.7
+8th February 2022
+
+- Removed GetRequestStatus call as no longer supported on the core platform
+
+
 # Version 1.0.0.6
 7th February 2022
 
@@ -16,6 +22,7 @@
 24th March 2021
 
 - Made the supported protocols constants so they can be used in switch statements by clients
+
 
 # Version 1.0.0.3
 18th March 2021

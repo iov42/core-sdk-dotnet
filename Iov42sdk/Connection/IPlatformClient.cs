@@ -14,11 +14,9 @@ using Iov42sdk.Models.GetEndorsement;
 using Iov42sdk.Models.GetIdentity;
 using Iov42sdk.Models.GetIdentityPublicKey;
 using Iov42sdk.Models.GetProof;
-using Iov42sdk.Models.GetRequestStatus;
 using Iov42sdk.Models.Headers;
 using Iov42sdk.Models.Health;
 using Iov42sdk.Models.Transactions;
-using Iov42sdk.Models.Transfers;
 using Iov42sdk.Support;
 
 namespace Iov42sdk.Connection
@@ -47,13 +45,6 @@ namespace Iov42sdk.Connection
         /// </summary>
         /// <returns>The node information</returns>
         Task<ResponseResult<NodeInfo>> GetNodeInfo();
-
-        /// <summary>
-        /// Get the status of a request
-        /// </summary>
-        /// <param name="requestId">The id of the request to check</param>
-        /// <returns>The status of the request</returns>
-        Task<ResponseResult<RequestStatusResult>> GetRequestStatus(string requestId);
 
         /// <summary>
         /// Creates a new identity

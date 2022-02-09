@@ -12,7 +12,6 @@
         public const string HealthChecksEndPoint = "healthchecks";
         public const string NodeInfoEndPoint = "node-info";
         public const string ProofsEndPoint = "proofs";
-        public const string RequestsEndPoint = "requests";
         public const string AssetsEndPoint = "assets";
         public const string ClaimsEndPoint = "claims";
         public const string EndorsementsEndPoint = "endorsements";
