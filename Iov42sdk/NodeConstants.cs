@@ -21,6 +21,7 @@
         public const string PutEndPoint = "requests";
         // Request types
         public const string IssueIdentityRequestType = "IssueIdentityRequest";
+        public const string CreateIdentityRequestType = "CreateIdentityRequest";
         public const string DefineAssetTypeRequestType = "DefineAssetTypeRequest";
         public const string CreateAssetRequestType = "CreateAssetRequest";
         public const string AddQuantityRequestType = "AddQuantityRequest";

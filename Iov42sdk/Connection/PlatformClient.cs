@@ -10,6 +10,7 @@ using Iov42sdk.Models.AddDelegate;
 using Iov42sdk.Models.CreateAsset;
 using Iov42sdk.Models.CreateAssetType;
 using Iov42sdk.Models.CreateClaims;
+using Iov42sdk.Models.CreateIdentity;
 using Iov42sdk.Models.GetAsset;
 using Iov42sdk.Models.GetAssetType;
 using Iov42sdk.Models.GetClaim;
@@ -48,8 +49,10 @@ namespace Iov42sdk.Connection
             var info = await GetNodeInfo();
             _getBuilder = new PlatformGetRequestBuilder(_baseUrl, info.Value.NodeId);
             _iovClient.Init(_identity);
+            // For now use issue identity to create the first identity until we agree a way
+            // to use one that has been created on an environment previously
             if (isNewIdentity)
-                await CreateIdentity(_identity);
+                await IssueIdentity(_identity);
             return _identity.Crypto.Pair;
         }
 
@@ -69,6 +72,14 @@ namespace Iov42sdk.Connection
         }
 
         public async Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity)
+        {
+            var body = new CreateIdentityBody(identity.Id, new Credentials(identity.Crypto.Pair.PublicKeyBase64String, identity.Crypto.ProtocolId));
+            var request = BuildRequest(body, new[] {_identity}, _identity);
+            return await Write(request);
+        }
+
+        // Will be deprecated
+        private async Task<ResponseResult<WriteResult>> IssueIdentity(IdentityDetails identity)
         {
             var body = new IssueIdentityBody(identity.Id, new Credentials(identity.Crypto.Pair.PublicKeyBase64String, identity.Crypto.ProtocolId));
             var request = BuildRequest(body, new[] {identity}, identity);

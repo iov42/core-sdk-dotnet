@@ -36,10 +36,17 @@ namespace Iov42sdk.Models.GetEndorsement
 
         public string SubjectTypeId { get; set; }
         public string SubjectId { get; }
+        public bool CreateClaims { get; private set; }
         public string EndorserId { get; }
         public string RequestId { get; }
 
         public IEnumerable<Endorsement> AllEndorsements => _endorsements.ToArray();
+
+        public Endorsements AndCreateClaims()
+        {
+            CreateClaims = true;
+            return this;
+        }
 
         public Endorsements AddEndorsement(string claim)
         {

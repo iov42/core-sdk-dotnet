@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BouncyCastleCrypto;
@@ -154,9 +155,8 @@ namespace IntegrationTests
                 .AddEndorsement(locationClaim)
                 .AddEndorsement(regulatoryClaim);
             var body = endorsements.GenerateAssetEndorsementBody(horseId).Serialize();
-            var testHeader = test.Client.GenerateAuthorisation(body);
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
-            var endorse = await test.Client.CreateAssetClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
+            var endorse = await test.Client.CreateAssetClaimsEndorsements(endorsements, endorsements.RequestId, body, iovBankHeader);
             
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -285,8 +285,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetEndorsementBody(horseId).Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
-            var claimMap = endorsements.GetClaims();
-            var claimsHeader = test.Client.GenerateClaimsHeader(claimMap);
+            var claimsHeader = test.Client.GenerateClaimsHeader(new Dictionary<string, string>());
             var request = new PlatformWriteRequest(endorsements.RequestId, body, new[] { testHeader, iovBankHeader }).WithAdditionalHeaders(claimsHeader);
             var endorse = await test.Client.Write(request);
             endorse.VerifyWriteResult(2);

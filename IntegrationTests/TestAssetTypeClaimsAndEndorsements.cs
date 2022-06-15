@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BouncyCastleCrypto;
@@ -256,8 +257,7 @@ namespace IntegrationTests
             var body = endorsements.GenerateAssetTypeEndorsementBody().Serialize();
             var testHeader = test.Client.GenerateAuthorisation(body);
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
-            var claimMap = endorsements.GetClaims();
-            var claimsHeader = test.Client.GenerateClaimsHeader(claimMap);
+            var claimsHeader = test.Client.GenerateClaimsHeader(new Dictionary<string, string>());
             var request = new PlatformWriteRequest(endorsements.RequestId, body, new[] { testHeader, iovBankHeader }).WithAdditionalHeaders(claimsHeader);
             var endorse = await test.Client.Write(request);
             endorse.VerifyWriteResult(2);

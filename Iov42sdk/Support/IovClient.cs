@@ -195,9 +195,10 @@ namespace Iov42sdk.Support
         internal async Task<ResponseResult<WriteResult>> CreateClaimsEndorsements(Endorsements endorsements, string requestId, string body,
             params Authorisation[] authorisations)
         {
-            var claimMap = endorsements.GetClaims();
+            var request = new PlatformWriteRequest(requestId, body, authorisations);
+            var claimMap = endorsements.CreateClaims ? endorsements.GetClaims() : new Dictionary<string, string>();
             var claimsHeader = GenerateClaimsHeader(claimMap);
-            var request = new PlatformWriteRequest(requestId, body, authorisations).WithAdditionalHeaders(claimsHeader);
+            request.WithAdditionalHeaders(claimsHeader);
             return await ProcessSignedPutRequest(request);
         }
         
