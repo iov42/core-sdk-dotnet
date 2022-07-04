@@ -80,7 +80,7 @@ namespace IntegrationTests
             var newId = _test.IdentityBuilder.Create();
             
             var _ = await _test.Client.CreateIdentity(newId);
-            var newClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, newId);
+            var newClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, newId);
             var horse = _test.CreateUniqueId("Horse")+newId.Id;
             var __ = await newClient.CreateUniqueAssetType(horse);
             
@@ -98,7 +98,7 @@ namespace IntegrationTests
             Assert.AreEqual(newId.Crypto.Pair.PublicKeyBase64String, reuse.Crypto.Pair.PublicKeyBase64String);
 
             // Create a client using the reused identity
-            var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.Environment, reuse);
+            var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.DefaultClientSettings, reuse);
             
             // Test an authenticated call using the reused identity
             var response = await reuseClient.CreateUniqueAsset(_test.CreateUniqueId("Trevor"), horse);
@@ -118,7 +118,7 @@ namespace IntegrationTests
             var reuse = _test.IdentityBuilder.Create();
             
             // Create a client using the reused identity
-            var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.Environment, reuse);
+            var reuseClient = await ClientBuilder.CreateWithExistingIdentity(TestEnvironment.DefaultClientSettings, reuse);
             
             // Test an authenticated call using the reused identity
             var response = await reuseClient.CreateUniqueAsset(_test.CreateUniqueId("Trevor"), horse);

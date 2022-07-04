@@ -51,16 +51,24 @@ You can also use an existing identity by passing the id and the keypair to use.
 
 ### Creating the connection
 
-To interact with the platform you need to create a client. To do this, call the ClientBuilder and pass the url for the endpoint and the identity you just created. If it is a new identity that has not been saved to the platform before then you use:
+To interact with the platform you need to create a client. To do this, there are two steps. The first step is to build a ClientSettings instance that contains the configuration information for the client.
+
+Create a new instance of the client settings, passing in the url for the endpoint to connect to. You can optionally set a delay when the platform returns a redirect status code and also whether you want to add a delay to GET operations to try and account for eventual consistency (maybe useful for some use cases):
 
 ``` csharp
-var client = await ClientBuilder.CreateWithNewIdentity("a url here", identity);
+var settings = new ClientSettings("a url here");
 ```
 
-If you plan to use an entry that has been previously saved then you can use:
+The second step is to call the ClientBuilder and pass the settings and the identity you just created. If it is a new identity that has not been saved to the platform before then you use:
 
 ``` csharp
-var client = await ClientBuilder.CreateWithExistingIdentity("a url here", identity);
+var client = await ClientBuilder.CreateWithNewIdentity(settings, identity);
+```
+
+If you plan to use an identity that has been previously saved then you can use:
+
+``` csharp
+var client = await ClientBuilder.CreateWithExistingIdentity(settings, identity);
 ```
 
 You can now interact with the platform using this client!
@@ -132,7 +140,7 @@ The amount of a quantifiable asset is held in something equivalent to an account
 ``` csharp
 var accountId = "AccountGBP";
 var newQuantifiableAssetResponse = await client.CreateQuantifiableAccount(accountId, gbpId, 1000);
-``` 
+```
 
 It is also possible to add extra balance to a quantifiable asset. 
 
@@ -155,7 +163,7 @@ Now we have assets we can transfer them between identities. Let's create a new i
 ``` csharp
 var alice = identityBuilder.Create();
 var _ = await client.CreateIdentity(alice);
-``` 
+```
 
 We next have to create the actual transfer to perform and then send it to the platform. This transfer will be of Trever from the current identity (held in client) to our new identity, Alice.
 
@@ -331,7 +339,7 @@ var authorisations = new[] { client.GenerateAuthorisation(bodyText, newId) };
 var authentication = client.GenerateAuthentication(authorisations, newId);
 var request = new PlatformWriteRequest(body.RequestId, bodyText, authorisations, authentication);
 var issueIdentityResponse = await client.Write(request);
-``` 
+```
 
 ## Solution Structure
 

@@ -1,3 +1,13 @@
+# Version 1.0.0.8
+4th July 2022
+
+- Updated .NET core version to 2.1
+- Changed to use createIdentity for most identity creation
+- Fixed endorsement issue - passing claims in header was causing permission failure
+- Simplified the retry logic
+- Added client settings to allow more control of timing
+- Updated health status API
+
 # Version 1.0.0.7
 8th February 2022
 

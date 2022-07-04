@@ -15,7 +15,7 @@ namespace IntegrationTests.Support
         {
             IdentityBuilder = new IdentityBuilder(k => CreateCrypto(k, engine));
             Identity = IdentityBuilder.Create();
-            Client = ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, Identity).Result;
+            Client = ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, Identity).Result;
         }
 
         internal static BouncyCrypto CreateCrypto(IKeyPair k, Func<ICryptoEngine> engine = null)

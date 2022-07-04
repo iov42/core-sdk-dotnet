@@ -3,12 +3,14 @@
     public class HealthStatusResult
     {
         public BuildInfo BuildInfo { get; set; }
-        public WriteServiceStatus Broker { get; set; }
-        public ReadServiceStatus RequestStore { get; set; }
-        public ReadServiceStatus AssetStore { get; set; }
-        public ReadServiceStatus ClaimStore { get; set; }
-        public ReadServiceStatus EndorsementStore { get; set; }
-        public ReadServiceStatus ProofStore { get; set; }
-        public HsmStatus Hsm { get; set; }
+        public BrokerHealthStatus Broker { get; set; }
+        public StoreHealthStatus AssetStore { get; set; }
+        public StoreHealthStatus ClaimStore { get; set; }
+        public StoreHealthStatus EndorsementStore { get; set; }
+        public StoreHealthStatus PermissionStore { get; set; }
+        public StoreHealthStatus TransactionStore { get; set; }
+        public StoreHealthStatus TransferStore { get; set; }
+        public StoreHealthStatus TransferByIdentityStore { get; set; }
+        public HsmHealthStatus Hsm { get; set; }
     }
 }

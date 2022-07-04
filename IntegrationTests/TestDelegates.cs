@@ -55,7 +55,7 @@ namespace IntegrationTests
             var response = await test.Client.AddDelegate(delegateId);
             Assert.IsTrue(response.Success);
             
-            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, delegateId);
+            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, delegateId);
             delegateClient.UseDelegator(test.Identity.Id);
             var horseId = test.CreateUniqueId("horse");
             var newUniqueAssetTypeResponse = await delegateClient.CreateUniqueAssetType(horseId);
@@ -77,7 +77,7 @@ namespace IntegrationTests
             using var test = new IntegrationTestCreation();
             var delegateId = test.IdentityBuilder.Create();
             var _ = await test.Client.CreateIdentity(delegateId);
-            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, delegateId);
+            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, delegateId);
 
             // Flag as using a delegate but we have not set it up on the platform as we
             // haven't called AddDelegate
@@ -99,7 +99,7 @@ namespace IntegrationTests
             
             Assert.IsTrue(response.Success);
             
-            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, delegateId);
+            using var delegateClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, delegateId);
             delegateClient.UseDelegator(test.Identity.Id);
             
             var horseId = test.CreateUniqueId("horse");

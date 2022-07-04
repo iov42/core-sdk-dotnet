@@ -1,6 +1,6 @@
 ﻿namespace Iov42sdk.Models.Health
 {
-    public class HsmStatus
+    public class HsmHealthStatus
     {
         public bool HasKeys { get; set; }
     }

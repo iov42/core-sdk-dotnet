@@ -206,7 +206,7 @@ namespace IntegrationTests
             writeResult = await _test.Client.AddDelegate(delegate1);
             Assert.IsTrue(writeResult.Success);
 
-            using var delegateClient1 = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, delegate1);
+            using var delegateClient1 = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, delegate1);
             delegateClient1.UseDelegator(_test.Identity.Id);
 
             var delegate2 = _test.IdentityBuilder.Create();
@@ -214,7 +214,7 @@ namespace IntegrationTests
             Assert.IsTrue(writeResult.Success);
             writeResult = await _test.Client.AddDelegate(delegate2);
             Assert.IsTrue(writeResult.Success);
-            using var delegateClient2 = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, delegate2);
+            using var delegateClient2 = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, delegate2);
             delegateClient2.UseDelegator(_test.Identity.Id);
 
             var accountA = _test.CreateUniqueId("AccountA");

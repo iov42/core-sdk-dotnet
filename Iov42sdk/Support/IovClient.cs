@@ -17,7 +17,7 @@ namespace Iov42sdk.Support
 {
     internal class IovClient : IDisposable
     {
-        private const string RetryAfter = "Retry-After";
+        private readonly ClientSettings _clientSettings;
         private const string JsonMediaType = "application/json";
 
         private readonly JsonConversion _json;
@@ -26,15 +26,16 @@ namespace Iov42sdk.Support
         private string _delegatorId;
         private readonly EventualConsistency _eventualConsistency = new EventualConsistency();
 
-        public IovClient(Uri baseAddress)
+        public IovClient(ClientSettings clientSettings)
         {
+            _clientSettings = clientSettings;
             _json = new JsonConversion();
             var httpClientHandler = new HttpClientHandler
             {
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
             };
-            _client = new HttpClient(httpClientHandler) { BaseAddress = baseAddress };
+            _client = new HttpClient(httpClientHandler) { BaseAddress = _clientSettings.BaseAddress };
         }
 
         internal IovClient Init(IdentityDetails identity)
@@ -82,7 +83,8 @@ namespace Iov42sdk.Support
             {
                 Headers = {{NodeConstants.Iov42Authentication, encodedAuthenticationJsonForGet}}
             };
-            await _eventualConsistency.ReadOperation();
+            if (_clientSettings.DelayForConsistency)
+                await _eventualConsistency.ReadOperation();
             return await ContactNode<T>(request);
         }
 
@@ -130,19 +132,15 @@ namespace Iov42sdk.Support
                     var converted = _json.ConvertTo<T>(result);
                     return new ResponseResult<T>(converted, response.IsSuccessStatusCode, response.StatusCode, response.ReasonPhrase);
                 }
-                request = await BuildRedirectRequest(request, response);
+                request = await BuildRedirectRequest(request);
             }
         }
 
-        private static async Task<HttpRequestMessage> BuildRedirectRequest(HttpRequestMessage request, HttpResponseMessage response)
+        private async Task<HttpRequestMessage> BuildRedirectRequest(HttpRequestMessage request)
         {
-            // Need to handle the retry-after - hence this code. Have to clone the request as we can't just resubmit it
+            // Need to delay the retry - hence this code. Have to clone the request as we can't just resubmit it
             var copy = await CloneHttpRequestMessageAsync(request);
-            if (!response.Headers.TryGetValues(RetryAfter, out var values)) 
-                return copy;
-            var retry = values as string[] ?? values.ToArray();
-            if (retry.Length == 1 && int.TryParse(retry.ElementAt(0), out var millisecondsDelay)) 
-                await Task.Delay(millisecondsDelay * 1000);
+            await Task.Delay(_clientSettings.RedirectDelay);
             return copy;
         }
 

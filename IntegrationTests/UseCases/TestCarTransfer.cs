@@ -20,7 +20,7 @@ namespace IntegrationTests.UseCases
             // Create an Identity for Motor Vehicle Authority (MVA). MVA is a imaginary state authority for motor vehicles
             var identityBuilder = new IdentityBuilder(BuildCrypto);
             var mvaIdentity = identityBuilder.Create(CreateUniqueId("MVA"));
-            var mvaClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, mvaIdentity);
+            var mvaClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, mvaIdentity);
             
             // MVA creates an AssetType to represent a Car
             var carType = CreateUniqueId("Car");
@@ -29,11 +29,11 @@ namespace IntegrationTests.UseCases
 
             // Create an Identity for Alice (an individual)
             var aliceIdentity = identityBuilder.Create(CreateUniqueId("Alice"));
-            var aliceClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, aliceIdentity);
+            var aliceClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, aliceIdentity);
 
             // Create an Identity for Bob (an individual)
             var bobIdentity = identityBuilder.Create(CreateUniqueId("Bob"));
-            var bobClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.Environment, bobIdentity);
+            var bobClient = await ClientBuilder.CreateWithNewIdentity(TestEnvironment.DefaultClientSettings, bobIdentity);
 
             // MVA registers an instance of a car AssetType
             var carId = CreateUniqueId("ACar");

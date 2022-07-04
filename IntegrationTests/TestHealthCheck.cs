@@ -17,26 +17,38 @@ namespace IntegrationTests
             Assert.IsNotNull(healthStatus);
             Assert.IsTrue(healthStatus.Success);
             var status = healthStatus.Value;
-            CheckWriteStatus(status.Broker);
-            CheckReadStatus(status.RequestStore);
-            CheckReadStatus(status.AssetStore);
-            CheckReadStatus(status.ClaimStore);
-            CheckReadStatus(status.EndorsementStore);
-            CheckReadStatus(status.ProofStore);
+            CheckBuildInfo(status.BuildInfo);
+            CheckBrokerStatus(status.Broker);
+            CheckStoreStatus(status.AssetStore);
+            CheckStoreStatus(status.ClaimStore);
+            CheckStoreStatus(status.EndorsementStore);
+            CheckStoreStatus(status.PermissionStore);
+            CheckStoreStatus(status.TransactionStore);
+            CheckStoreStatus(status.TransferStore);
+            CheckStoreStatus(status.TransferByIdentityStore);
             Assert.IsTrue(status.Hsm.HasKeys);
         }
 
-        private static void CheckReadStatus(ReadServiceStatus status, bool expectedRead = true, bool expectedWrite = true)
+        private static void CheckStoreStatus(StoreHealthStatus status)
         {
             Assert.IsNotNull(status);
-            Assert.AreEqual(expectedRead, status.CanRead);
-            Assert.AreEqual(expectedWrite, status.CanWrite);
+            Assert.IsTrue(status.CanRead);
+            Assert.IsTrue(status.CanWrite);
         }
 
-        private static void CheckWriteStatus(WriteServiceStatus status, bool expectedWrite = true)
+        private static void CheckBrokerStatus(BrokerHealthStatus status)
         {
             Assert.IsNotNull(status);
-            Assert.AreEqual(expectedWrite, status.CanWrite);
+            Assert.IsTrue(status.CanWrite);
+        }
+
+        private static void CheckBuildInfo(BuildInfo buildInfo)
+        {
+            Assert.IsNotNull(buildInfo);
+            Assert.IsNotNull(buildInfo.Name);
+            Assert.IsNotNull(buildInfo.Version);
+            Assert.IsNotNull(buildInfo.ScalaVersion);
+            Assert.IsNotNull(buildInfo.SbtVersion);
         }
     }
 }
