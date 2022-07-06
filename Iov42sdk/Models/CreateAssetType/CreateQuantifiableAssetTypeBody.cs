@@ -1,4 +1,6 @@
-﻿namespace Iov42sdk.Models.CreateAssetType
+﻿using Iov42sdk.Models.Permissions;
+
+namespace Iov42sdk.Models.CreateAssetType
 {
     public class CreateQuantifiableAssetTypeBody : CreateAssetTypeBody
     {
@@ -8,12 +10,14 @@
         {
         }
 
-        public CreateQuantifiableAssetTypeBody(string assetTypeId, int scale)
+        public CreateQuantifiableAssetTypeBody(string assetTypeId, int scale, QuantifiableAssetTypePermissions permissions = null)
             : base(QuantifiableAssetType, assetTypeId)
         {
             Scale = scale;
+            Permissions = permissions;
         }
 
         public int Scale { get; set; }
+        public QuantifiableAssetTypePermissions Permissions { get; set; }
     }
 }

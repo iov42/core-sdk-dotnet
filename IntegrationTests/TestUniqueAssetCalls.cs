@@ -97,5 +97,7 @@ namespace IntegrationTests
             var newUniqueAssetResponse = await _test.Client.Write(request);
             newUniqueAssetResponse.VerifyWriteResult();
         }
+
+        // TODO: Add permission tests
     }
 } 

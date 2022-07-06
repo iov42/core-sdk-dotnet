@@ -227,12 +227,14 @@ namespace IntegrationTests
             writeResult = await delegateClient1.CreateQuantifiableAccount(accountB, gbpId);
             Assert.IsTrue(writeResult.Success);
 
-
             var transferRequest = new TransferBuilder(delegateClient1)
                 .AddQuantityTransfer(accountA, accountB, gbpId, 3)
                 .Build();
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
+
+            // This transfer seems to take longer so build in a delay
+            await Task.Delay(500);
 
             var getQuantifiableAssetResponse = await delegateClient2.GetQuantifiableAsset(accountA, gbpId);
             Assert.AreEqual("7", getQuantifiableAssetResponse.Value.Quantity);

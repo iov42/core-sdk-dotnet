@@ -16,6 +16,7 @@ using Iov42sdk.Models.GetIdentityPublicKey;
 using Iov42sdk.Models.GetProof;
 using Iov42sdk.Models.Headers;
 using Iov42sdk.Models.Health;
+using Iov42sdk.Models.Permissions;
 using Iov42sdk.Models.Transactions;
 using Iov42sdk.Support;
 
@@ -50,7 +51,8 @@ namespace Iov42sdk.Connection
         /// Creates a new identity
         /// </summary>
         /// <param name="identity">The identity of the user to create - use IdentityBuilder to create it</param>
-        Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity);
+        /// <param name="permissions">The optional permissions to create when an identity is created</param>
+        Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity, IdentityPermissions permissions = null);
 
         /// <summary>
         /// Fetch the details for an identity
@@ -84,16 +86,18 @@ namespace Iov42sdk.Connection
         /// Create a new unique asset type
         /// </summary>
         /// <param name="assetTypeId">The address to use for the asset type</param>
+        /// <param name="permissions">The optional permissions to create when a unique asset type is created</param>
         /// <returns>The new asset type details</returns>
-        Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId);
+        Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId, UniqueAssetTypePermissions permissions = null);
 
         /// <summary>
         /// Create a new quantifiable asset type
         /// </summary>
         /// <param name="assetTypeId">The address to use for the asset type</param>
         /// <param name="scale">The scale of the quantities, 2 would be 2 decimal places</param>
+        /// <param name="permissions">The optional permissions to create when a quantifiable asset type is created</param>
         /// <returns>The new asset type details</returns>
-        Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale);
+        Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale, QuantifiableAssetTypePermissions permissions = null);
 
         /// <summary>
         /// Get the unique asset type details

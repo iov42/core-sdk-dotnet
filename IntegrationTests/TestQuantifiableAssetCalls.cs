@@ -162,5 +162,7 @@ namespace IntegrationTests
             Assert.AreEqual(getQuantifiableAssetResponse.Value.OwnerId, _test.Identity.Id);
             Assert.IsNotNull(getQuantifiableAssetResponse.Value.Proof);
         }
+
+        // TODO: Add permission tests
     }
 }

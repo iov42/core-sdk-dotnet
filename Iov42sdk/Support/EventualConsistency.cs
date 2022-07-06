@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Iov42sdk.Support
@@ -24,7 +23,6 @@ namespace Iov42sdk.Support
             // Save the best estimate when persistence will be complete - crudely scaled
             // based on how long the last write operation took
             var totalMilliseconds = now.Subtract(_start).TotalMilliseconds;
-            Debug.WriteLine(totalMilliseconds);
             _lastWriteLimit = now.AddMilliseconds(totalMilliseconds);
         }
 

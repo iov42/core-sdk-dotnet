@@ -22,6 +22,7 @@ using Iov42sdk.Models.GetProof;
 using Iov42sdk.Models.Headers;
 using Iov42sdk.Models.Health;
 using Iov42sdk.Models.IssueIdentity;
+using Iov42sdk.Models.Permissions;
 using Iov42sdk.Models.Transactions;
 using Iov42sdk.Models.UpdateBalance;
 using Iov42sdk.Support;
@@ -70,9 +71,9 @@ namespace Iov42sdk.Connection
             return await _iovClient.ProcessSimpleGetRequest<HealthStatusResult>(request.Path);
         }
 
-        public async Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity)
+        public async Task<ResponseResult<WriteResult>> CreateIdentity(IdentityDetails identity, IdentityPermissions permissions = null)
         {
-            var body = new CreateIdentityBody(identity.Id, new Credentials(identity.Crypto.Pair.PublicKeyBase64String, identity.Crypto.ProtocolId));
+            var body = new CreateIdentityBody(identity.Id, new Credentials(identity.Crypto.Pair.PublicKeyBase64String, identity.Crypto.ProtocolId), permissions);
             var request = BuildRequest(body, new[] {_identity}, _identity);
             return await Write(request);
         }
@@ -121,16 +122,16 @@ namespace Iov42sdk.Connection
             return await _iovClient.ProcessSignedGetRequest<GetDelegatesResult>(request.Path);
         }
 
-        public async Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId)
+        public async Task<ResponseResult<WriteResult>> CreateUniqueAssetType(string assetTypeId, UniqueAssetTypePermissions permissions = null)
         {
-            var body = new CreateUniqueAssetTypeBody(assetTypeId);
+            var body = new CreateUniqueAssetTypeBody(assetTypeId, permissions);
             var request = BuildRequest(body, new[] {_identity}, _identity);
             return await Write(request);
         }
         
-        public async Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale)
+        public async Task<ResponseResult<WriteResult>> CreateQuantifiableAssetType(string assetTypeId, int scale, QuantifiableAssetTypePermissions permissions = null)
         {
-            var body = new CreateQuantifiableAssetTypeBody(assetTypeId, scale);
+            var body = new CreateQuantifiableAssetTypeBody(assetTypeId, scale, permissions);
             var request = BuildRequest(body, new[] {_identity}, _identity);
             return await Write(request);
         }

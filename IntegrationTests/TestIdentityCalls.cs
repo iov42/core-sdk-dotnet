@@ -148,5 +148,7 @@ namespace IntegrationTests
             var issueIdentityResponse = await _test.Client.Write(request);
             issueIdentityResponse.VerifyWriteResult();
         }
+
+        // TODO: Add permission tests
     }
 }
