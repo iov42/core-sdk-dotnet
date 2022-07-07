@@ -1,4 +1,5 @@
 ﻿using System;
+using IntegrationTests.Support;
 using Iov42sdk.Models.Permissions;
 using Iov42sdk.Support.Permissions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,10 +12,9 @@ namespace IntegrationTests.Permissions
         [TestMethod]
         public void ShouldCreateAllNullFields()
         {
-            var permissions = new PermissionBuilder()
-                .CreateUniqueAssetTypePermissions()
+            var permissions = new CreateUniqueAssetTypePermissionBuilder()
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
         }
 
         [TestMethod]
@@ -25,8 +25,8 @@ namespace IntegrationTests.Permissions
                 .WithCreateClaimForIdentity("123", true)
                 .WithCreateClaimForInstanceOwner(true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
-            PermissionTestHelper.CheckInstance(permissions.CreateClaim, 3, new[] { "123", InstancePermission.InstanceOwner }, new[] { InstancePermission.Everyone });
+            TestHelper.AllNull(permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
+            PermissionTestHelper.CheckInstance(permissions.CreateClaim, 3, new[] { "Identity(123)", InstancePermission.InstanceOwner }, new[] { InstancePermission.Everyone });
         }
 
                 [TestMethod]
@@ -37,8 +37,8 @@ namespace IntegrationTests.Permissions
                 .WithEndorseClaimForIdentity("123", true)
                 .WithEndorseClaimForInstanceOwner(false)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
-            PermissionTestHelper.CheckInstance(permissions.EndorseClaim, 3, new[] { "123", InstancePermission.Everyone}, new[] { InstancePermission.InstanceOwner });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read, permissions.Instances);
+            PermissionTestHelper.CheckInstance(permissions.EndorseClaim, 3, new[] { "Identity(123)", InstancePermission.Everyone}, new[] { InstancePermission.InstanceOwner });
         }
 
         [TestMethod]
@@ -49,8 +49,8 @@ namespace IntegrationTests.Permissions
                 .WithReadEndorsementForIdentity("123", false)
                 .WithReadEndorsementForInstanceOwner(true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadClaim, permissions.Read, permissions.Instances);
-            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 3, new[] { InstancePermission.Everyone, InstancePermission.InstanceOwner }, new[] { "123" });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadClaim, permissions.Read, permissions.Instances);
+            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 3, new[] { InstancePermission.Everyone, InstancePermission.InstanceOwner }, new[] { "Identity(123)" });
         }
 
         [TestMethod]
@@ -61,8 +61,8 @@ namespace IntegrationTests.Permissions
                 .WithReadClaimForIdentity("123", false)
                 .WithReadClaimForInstanceOwner(true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.Read, permissions.Instances);
-            PermissionTestHelper.CheckInstance(permissions.ReadClaim, 3, new[] { InstancePermission.InstanceOwner }, new[] { InstancePermission.Everyone, "123" });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.Read, permissions.Instances);
+            PermissionTestHelper.CheckInstance(permissions.ReadClaim, 3, new[] { InstancePermission.InstanceOwner }, new[] { InstancePermission.Everyone, "Identity(123)" });
         }
 
         [TestMethod]
@@ -73,8 +73,8 @@ namespace IntegrationTests.Permissions
                 .WithReadForIdentity("123", true)
                 .WithReadForTypeOwner(true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Instances);
-            PermissionTestHelper.CheckInstance(permissions.Read, 3, new[] { InstancePermission.TypeOwner, "123" }, new[] { InstancePermission.Everyone });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Instances);
+            PermissionTestHelper.CheckInstance(permissions.Read, 3, new[] { InstancePermission.TypeOwner, "Identity(123)" }, new[] { InstancePermission.Everyone });
         }
 
         [TestMethod]
@@ -87,8 +87,8 @@ namespace IntegrationTests.Permissions
                     .WithInstanceReadEndorsementForTypeOwner(false)
                     .BuildInstances())
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read);
-            PermissionTestHelper.CheckInstance(permissions.Instances.ReadEndorsement, 2, new[] { "123" }, new[] { InstancePermission.TypeOwner });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.Read);
+            PermissionTestHelper.CheckInstance(permissions.Instances.ReadEndorsement, 2, new[] { "Identity(123)" }, new[] { InstancePermission.TypeOwner });
             PermissionTestHelper.CheckInstance(permissions.Instances.CreateClaim, 1, new[] { InstancePermission.InstanceOwner }, Array.Empty<string>());
         }
     }

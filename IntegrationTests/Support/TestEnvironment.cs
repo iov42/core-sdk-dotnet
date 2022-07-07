@@ -8,7 +8,7 @@ namespace IntegrationTests.Support
         {
             Environment = System.Environment.GetEnvironmentVariable("IOV42_ENVIRONMENT");
             DefaultClientSettings = new ClientSettings(Environment)
-                .WithReadDelayForConsistency()
+                .WithConsistencyDelay(1000)
                 .WithRedirectDelay(500);
         }
 

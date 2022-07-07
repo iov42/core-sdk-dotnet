@@ -12,7 +12,7 @@ namespace IntegrationTests
         public async Task ShouldFetchStatus()
         {
             using var test = new IntegrationTestCreation();
-            var healthStatus = await test.Client.GetHealthStatus();
+            var healthStatus = await TestHelper.CallAndRetry(() => test.Client.GetHealthStatus());
 
             Assert.IsNotNull(healthStatus);
             Assert.IsTrue(healthStatus.Success);

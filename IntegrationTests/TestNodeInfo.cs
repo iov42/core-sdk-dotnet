@@ -11,7 +11,7 @@ namespace IntegrationTests
         public async Task ShouldFetchNodeInfo()
         {
             using var test = new IntegrationTestCreation();
-            var info = await test.Client.GetNodeInfo();
+            var info = await TestHelper.CallAndRetry(() =>test.Client.GetNodeInfo());
 
             Assert.IsNotNull(info);
             Assert.IsTrue(info.Success);

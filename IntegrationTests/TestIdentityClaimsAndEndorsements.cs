@@ -54,7 +54,7 @@ namespace IntegrationTests
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
             
-            var retrievedClaim = await test.Client.GetIdentityClaim(birthdayClaim);
+            var retrievedClaim = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaim(birthdayClaim));
             
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);
@@ -75,7 +75,7 @@ namespace IntegrationTests
             
             // Allow eventual consistency to persist the data
             await Task.Delay(500);
-            var retrievedClaim = await other.Client.GetIdentityClaim(test.Identity.Id, birthdayClaim);
+            var retrievedClaim = await TestHelper.CallAndRetry(() => other.Client.GetIdentityClaim(test.Identity.Id, birthdayClaim));
             
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);
@@ -93,7 +93,7 @@ namespace IntegrationTests
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var retrievedClaims = await test.Client.GetIdentityClaims();
+            var retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaims());
             
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -125,7 +125,7 @@ namespace IntegrationTests
 
             // Allow eventual consistency to persist the data
             await Task.Delay(500);
-            var retrievedClaims = await test.Client.GetIdentityClaims(bob.Identity.Id);
+            var retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaims(bob.Identity.Id));
             
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -154,7 +154,7 @@ namespace IntegrationTests
             var employerIov42 = Guid.NewGuid().ToString();
             var _ = await test.Client.CreateIdentityClaims(birthdayClaim, employerIov42);
 
-            var retrievedClaims = await test.Client.GetIdentityClaims(1);
+            var retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaims(1));
 
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -166,7 +166,7 @@ namespace IntegrationTests
             Assert.IsNotNull(firstClaim.Resource);
             Assert.IsNull(firstClaim.DelegateIdentityId);
 
-            retrievedClaims = await test.Client.GetIdentityClaims(1, retrievedClaims.Value.Next);
+            retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaims(1, retrievedClaims.Value.Next));
             
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -248,7 +248,7 @@ namespace IntegrationTests
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
             var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
-            var endorse = await test.Client.GetIdentityEndorsement(test.Identity.Id, birthdayClaim, iovBank.Identity.Id);
+            var endorse = await TestHelper.CallAndRetry(() => test.Client.GetIdentityEndorsement(test.Identity.Id, birthdayClaim, iovBank.Identity.Id));
             
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -280,7 +280,7 @@ namespace IntegrationTests
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
             var __ = await test.Client.CreateIdentityClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
-            var retrievedClaim = await test.Client.GetIdentityClaim(birthdayClaim);
+            var retrievedClaim = await TestHelper.CallAndRetry(() => test.Client.GetIdentityClaim(birthdayClaim));
             
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);

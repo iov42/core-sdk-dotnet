@@ -25,7 +25,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceCreateClaimForInstanceOwner(true)
                 .BuildInstances();
             AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.Create, instances.Transfer);
-            CheckInstance(instances.CreateClaim, 4, new [] {"123", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
+            CheckInstance(instances.CreateClaim, 4, new [] {"Identity(123)", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
         }
 
         [TestMethod]
@@ -37,7 +37,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceCreateForTypeOwner(true)
                 .BuildInstances();
             AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.CreateClaim, instances.Transfer);
-            CheckInstance(instances.Create, 3, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {"123"});
+            CheckInstance(instances.Create, 3, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {"Identity(123)"});
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadForInstanceOwner(false)
                 .BuildInstances();
             AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Create, instances.ReadClaim, instances.CreateClaim, instances.Transfer);
-            CheckInstance(instances.Read, 4, new [] {InstancePermission.Everyone, "123"}, new [] {InstancePermission.TypeOwner, InstancePermission.InstanceOwner});
+            CheckInstance(instances.Read, 4, new [] {InstancePermission.Everyone, "Identity(123)"}, new [] {InstancePermission.TypeOwner, InstancePermission.InstanceOwner});
         }
 
         [TestMethod]
@@ -63,7 +63,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadClaimForInstanceOwner(true)
                 .BuildInstances();
             AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer);
-            CheckInstance(instances.ReadClaim, 4, new [] {"123", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
+            CheckInstance(instances.ReadClaim, 4, new [] {"Identity(123)", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceEndorseClaimForInstanceOwner(true)
                 .BuildInstances();
             AllNull(instances.ReadClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer);
-            CheckInstance(instances.EndorseClaim, 4, new [] {InstancePermission.InstanceOwner, InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {"123"});
+            CheckInstance(instances.EndorseClaim, 4, new [] {InstancePermission.InstanceOwner, InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {"Identity(123)"});
         }
 
         [TestMethod]
@@ -89,7 +89,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadEndorsementForInstanceOwner(true)
                 .BuildInstances();
             AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer);
-            CheckInstance(instances.ReadEndorsement, 4, new [] {InstancePermission.InstanceOwner}, new[] {InstancePermission.Everyone, InstancePermission.TypeOwner, "123"});
+            CheckInstance(instances.ReadEndorsement, 4, new [] {InstancePermission.InstanceOwner}, new[] {InstancePermission.Everyone, InstancePermission.TypeOwner, "Identity(123)"});
         }
 
         [TestMethod]
@@ -102,7 +102,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceTransferForInstanceOwner(false)
                 .BuildInstances();
             AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement);
-            CheckInstance(instances.Transfer, 4, new [] {InstancePermission.TypeOwner, "123"}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
+            CheckInstance(instances.Transfer, 4, new [] {InstancePermission.TypeOwner, "Identity(123)"}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
         }
 
         [TestMethod]
@@ -114,7 +114,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceTransferForInstanceOwner(false)
                 .BuildInstances();
             AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement);
-            CheckInstance(instances.Transfer, 3, new [] {"123"}, new[] {"456", InstancePermission.InstanceOwner});
+            CheckInstance(instances.Transfer, 3, new [] {"Identity(123)"}, new[] {"Identity(456)", InstancePermission.InstanceOwner});
         }
 
         private static void AllNull(params InstancePermission[] instances)

@@ -192,6 +192,12 @@ namespace Iov42sdk.Connection
             return await _iovClient.ProcessSimpleGetRequest<NodeInfo>(NodeConstants.NodeInfoEndPoint);
         }
 
+        public async Task<ResponseResult<WriteResult>> CreateIdentityClaimsOnIdentity(string identity, params string[] claims)
+        {
+            return await _iovClient.CreateClaims(claimMap =>
+                new CreateClaimsBody(NodeConstants.CreateIdentityClaimsRequestType, identity, claimMap.Keys.ToArray()), claims);
+        }
+
         public async Task<ResponseResult<WriteResult>> CreateIdentityClaims(params string[] claims)
         {
             return await _iovClient.CreateClaims(claimMap =>

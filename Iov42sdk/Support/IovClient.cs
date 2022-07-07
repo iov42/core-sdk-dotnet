@@ -83,8 +83,8 @@ namespace Iov42sdk.Support
             {
                 Headers = {{NodeConstants.Iov42Authentication, encodedAuthenticationJsonForGet}}
             };
-            if (_clientSettings.DelayForConsistency)
-                await _eventualConsistency.ReadOperation();
+            if (_clientSettings.DelayForConsistency > 0)
+                await _eventualConsistency.ReadOperation(_clientSettings);
             return await ContactNode<T>(request);
         }
 

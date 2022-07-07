@@ -1,4 +1,5 @@
-﻿using Iov42sdk.Models.Permissions;
+﻿using IntegrationTests.Support;
+using Iov42sdk.Models.Permissions;
 using Iov42sdk.Support.Permissions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,7 +13,7 @@ namespace IntegrationTests.Permissions
         {
             var instances = new CreateQuantifiableAssetTypeInstancesPermissionsBuilder()
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.CreateClaim, instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.Create, instances.Transfer, instances.AddQuantity);
+            TestHelper.AllNull(instances.CreateClaim, instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.Create, instances.Transfer, instances.AddQuantity);
         }
 
         [TestMethod]
@@ -24,8 +25,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceCreateClaimForTypeOwner(false)
                 .WithInstanceCreateClaimForInstanceOwner(true)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.Create, instances.Transfer, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.CreateClaim, 4, new [] {"123", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
+            TestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.Create, instances.Transfer, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.CreateClaim, 4, new [] {InstancePermission.Identity("123"), InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
         }
 
         [TestMethod]
@@ -35,7 +36,7 @@ namespace IntegrationTests.Permissions
                 .WithInstanceCreateForEveryone(true)
                 .WithInstanceCreateForTypeOwner(false)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.CreateClaim, instances.Transfer, instances.AddQuantity);
+            TestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.ReadClaim, instances.CreateClaim, instances.Transfer, instances.AddQuantity);
             PermissionTestHelper.CheckInstance(instances.Create, 2, new [] {InstancePermission.Everyone}, new [] {InstancePermission.TypeOwner});
         }
 
@@ -48,8 +49,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadForTypeOwner(false)
                 .WithInstanceReadForInstanceOwner(false)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Create, instances.ReadClaim, instances.CreateClaim, instances.Transfer, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.Read, 4, new [] {InstancePermission.Everyone, "123"}, new [] {InstancePermission.TypeOwner, InstancePermission.InstanceOwner});
+            TestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Create, instances.ReadClaim, instances.CreateClaim, instances.Transfer, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.Read, 4, new [] {InstancePermission.Everyone, InstancePermission.Identity("123")}, new [] {InstancePermission.TypeOwner, InstancePermission.InstanceOwner});
         }
 
         [TestMethod]
@@ -61,8 +62,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadClaimForTypeOwner(false)
                 .WithInstanceReadClaimForInstanceOwner(true)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.ReadClaim, 4, new [] {"123", InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
+            TestHelper.AllNull(instances.EndorseClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.ReadClaim, 4, new [] {InstancePermission.Identity("123"), InstancePermission.InstanceOwner}, new [] {InstancePermission.Everyone, InstancePermission.TypeOwner});
         }
 
         [TestMethod]
@@ -74,8 +75,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceEndorseClaimForTypeOwner(true)
                 .WithInstanceEndorseClaimForInstanceOwner(true)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.ReadClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.EndorseClaim, 4, new [] {InstancePermission.InstanceOwner, InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {"123"});
+            TestHelper.AllNull(instances.ReadClaim, instances.ReadEndorsement, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.EndorseClaim, 4, new [] {InstancePermission.InstanceOwner, InstancePermission.Everyone, InstancePermission.TypeOwner}, new [] {InstancePermission.Identity("123")});
         }
 
         [TestMethod]
@@ -87,8 +88,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceReadEndorsementForTypeOwner(false)
                 .WithInstanceReadEndorsementForInstanceOwner(true)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.ReadEndorsement, 4, new [] {InstancePermission.InstanceOwner}, new[] {InstancePermission.Everyone, InstancePermission.TypeOwner, "123"});
+            TestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.Transfer, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.ReadEndorsement, 4, new [] {InstancePermission.InstanceOwner}, new[] {InstancePermission.Everyone, InstancePermission.TypeOwner, InstancePermission.Identity("123")});
         }
 
         [TestMethod]
@@ -100,8 +101,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceTransferForTypeOwner(true)
                 .WithInstanceTransferForInstanceOwner(false)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement, instances.AddQuantity);
-            PermissionTestHelper.CheckInstance(instances.Transfer, 4, new [] {InstancePermission.TypeOwner, "123"}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
+            TestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement, instances.AddQuantity);
+            PermissionTestHelper.CheckInstance(instances.Transfer, 4, new [] {InstancePermission.TypeOwner, InstancePermission.Identity("123")}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
         }
 
         [TestMethod]
@@ -113,8 +114,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceAddQuantityForTypeOwner(true)
                 .WithInstanceAddQuantityForInstanceOwner(false)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement, instances.Transfer);
-            PermissionTestHelper.CheckInstance(instances.AddQuantity, 4, new [] {InstancePermission.TypeOwner, "123"}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
+            TestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement, instances.Transfer);
+            PermissionTestHelper.CheckInstance(instances.AddQuantity, 4, new [] {InstancePermission.TypeOwner, InstancePermission.Identity("123")}, new[] {InstancePermission.Everyone, InstancePermission.InstanceOwner});
         }
 
         [TestMethod]
@@ -125,8 +126,8 @@ namespace IntegrationTests.Permissions
                 .WithInstanceTransferForIdentity("456", false)
                 .WithInstanceTransferForInstanceOwner(false)
                 .BuildInstances();
-            PermissionTestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement);
-            PermissionTestHelper.CheckInstance(instances.Transfer, 3, new [] {"123"}, new[] {"456", InstancePermission.InstanceOwner});
+            TestHelper.AllNull(instances.ReadClaim, instances.EndorseClaim, instances.Read, instances.CreateClaim, instances.Create, instances.ReadEndorsement);
+            PermissionTestHelper.CheckInstance(instances.Transfer, 3, new [] {InstancePermission.Identity("123")}, new[] {InstancePermission.Identity("456"), InstancePermission.InstanceOwner});
         }
     }
 }

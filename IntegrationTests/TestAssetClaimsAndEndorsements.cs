@@ -51,7 +51,7 @@ namespace IntegrationTests
             
             var ___ = await test.Client.CreateAssetClaims(horseId, trevorId, locationClaim, regulatoryClaim);
             
-            var retrievedClaim = await test.Client.GetAssetClaim(horseId, trevorId, locationClaim);
+            var retrievedClaim = await TestHelper.CallAndRetry(() => test.Client.GetAssetClaim(horseId, trevorId, locationClaim));
             
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);
@@ -74,8 +74,8 @@ namespace IntegrationTests
             var __ = await test.Client.CreateUniqueAsset(trevorId, horseId);
             
             var ___ = await test.Client.CreateAssetClaims(horseId, trevorId, locationClaim, regulatoryClaim);
-            
-            var retrievedClaims = await test.Client.GetAssetClaims(horseId, trevorId);
+
+            var retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetAssetClaims(horseId, trevorId));
             
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -109,8 +109,8 @@ namespace IntegrationTests
             var __ = await test.Client.CreateUniqueAsset(trevorId, horseId);
             
             var ___ = await test.Client.CreateAssetClaims(horseId, trevorId, locationClaim, regulatoryClaim);
-
-            var retrievedClaims = await test.Client.GetAssetClaims(horseId, trevorId, 1);
+            
+            var retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetAssetClaims(horseId, trevorId, 1));
             
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
@@ -122,7 +122,7 @@ namespace IntegrationTests
             Assert.IsNotNull(firstClaim.Resource);
             Assert.IsNull(firstClaim.DelegateIdentityId);
 
-            retrievedClaims = await test.Client.GetAssetClaims(horseId, trevorId, 1, retrievedClaims.Value.Next);
+            retrievedClaims = await TestHelper.CallAndRetry(() => test.Client.GetAssetClaims(horseId, trevorId, 1, retrievedClaims.Value.Next));
             Assert.IsNotNull(retrievedClaims);
             Assert.IsTrue(retrievedClaims.Success);
             Assert.IsNull(retrievedClaims.Value.Next);
@@ -190,7 +190,7 @@ namespace IntegrationTests
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
             var ______ = await test.Client.CreateAssetClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
-            var endorse = await test.Client.GetAssetEndorsement(horseId, trevorId, locationClaim, iovBank.Identity.Id);
+            var endorse = await TestHelper.CallAndRetry(() => test.Client.GetAssetEndorsement(horseId, trevorId, locationClaim, iovBank.Identity.Id));
             
             Assert.IsNotNull(endorse);
             Assert.IsTrue(endorse.Success);
@@ -228,7 +228,7 @@ namespace IntegrationTests
             var iovBankHeader = iovBank.Client.GenerateAuthorisation(body);
             var ______ = await test.Client.CreateAssetClaimsEndorsements(endorsements, endorsements.RequestId, body, testHeader, iovBankHeader);
             
-            var retrievedClaim = await test.Client.GetAssetClaim(horseId, trevorId, locationClaim);
+            var retrievedClaim = await TestHelper.CallAndRetry(() => test.Client.GetAssetClaim(horseId, trevorId, locationClaim));
             
             Assert.IsNotNull(retrievedClaim);
             Assert.IsTrue(retrievedClaim.Success);

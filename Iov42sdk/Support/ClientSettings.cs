@@ -5,8 +5,9 @@ namespace Iov42sdk.Support
     public class ClientSettings
     {
         public Uri BaseAddress { get; }
-        public bool DelayForConsistency { get; private set; }
+        public int DelayForConsistency { get; private set; }
         public int RedirectDelay { get; set; } = 1000;
+        public int ConsistencyDelay { get; } = 0;
 
         /// <summary>
         /// Create client settings
@@ -19,13 +20,14 @@ namespace Iov42sdk.Support
         }
 
         /// <summary>
-        /// Add in a default delay to any read operation after a write operation to allow for
+        /// Add in a delay to any read operation after a write operation to allow for
         /// eventual consistency - default is off
         /// </summary>
+        /// <param name="delay">The delay in ms</param>
         /// <returns></returns>
-        public ClientSettings WithReadDelayForConsistency()
+        public ClientSettings WithConsistencyDelay(int delay)
         {
-            DelayForConsistency = true;
+            DelayForConsistency = delay;
             return this;
         }
 

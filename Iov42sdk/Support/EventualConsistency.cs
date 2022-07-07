@@ -5,8 +5,6 @@ namespace Iov42sdk.Support
 {
     internal class EventualConsistency
     {
-        private static readonly TimeSpan ConsistencyDelay = TimeSpan.FromMilliseconds(500);
-
         private DateTime _lastWriteLimit = DateTime.MinValue;
         private DateTime _start;
         private bool _writePerformed;
@@ -26,13 +24,13 @@ namespace Iov42sdk.Support
             _lastWriteLimit = now.AddMilliseconds(totalMilliseconds);
         }
 
-        public async Task ReadOperation()
+        public async Task ReadOperation(ClientSettings settings)
         {
             // Allow eventual consistency of persistence to kick in
             if (_lastWriteLimit <= DateTime.UtcNow || !_writePerformed) 
                 return;
             _writePerformed = false;
-            await Task.Delay(ConsistencyDelay);
+            await Task.Delay(settings.ConsistencyDelay);
             _lastWriteLimit = DateTime.MinValue;
         }
     }

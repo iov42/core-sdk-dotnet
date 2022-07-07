@@ -50,7 +50,7 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
-            var response = await bruceClient.Client.GetTransactions(gbpId, bruceAccount);
+            var response = await TestHelper.CallAndRetry(() => bruceClient.Client.GetTransactions(gbpId, bruceAccount));
             CheckTransactionResponse(response);
         }
 
@@ -79,7 +79,7 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
-            var response = await _test.Client.GetTransactions(gbpId, account);
+            var response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(gbpId, account));
             CheckTransactionResponse(response);
         }
 
@@ -102,7 +102,7 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
-            var response = await bruceClient.Client.GetTransactions(horseId, trevorId);
+            var response = await TestHelper.CallAndRetry(() =>bruceClient.Client.GetTransactions(horseId, trevorId));
             CheckTransactionResponse(response);
         }
 
@@ -124,7 +124,7 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
-            var response = await _test.Client.GetTransactions(horseId, trevorId);
+            var response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(horseId, trevorId));
             CheckTransactionResponse(response);
         }
 
@@ -154,10 +154,10 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
             
-            var response = await _test.Client.GetTransactions(gbpId, account, 1);
+            var response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(gbpId, account, 1));
             CheckTransactionResponse(response, 1, true);
 
-            response = await _test.Client.GetTransactions(gbpId, account, 1, response.Value.Next);
+            response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(gbpId, account, 1, response.Value.Next));
             CheckTransactionResponse(response);            
         }
 
@@ -186,9 +186,9 @@ namespace IntegrationTests
             writeResult = await _test.Client.Write(transferRequest);
             Assert.IsTrue(writeResult.Success);
 
-            var response = await _test.Client.GetTransactions(horseId, trevorId, 1);
+            var response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(horseId, trevorId, 1));
             CheckTransactionResponse(response, 1, true);
-            response = await _test.Client.GetTransactions(horseId, trevorId, 1, response.Value.Next);
+            response = await TestHelper.CallAndRetry(() =>_test.Client.GetTransactions(horseId, trevorId, 1, response.Value.Next));
             CheckTransactionResponse(response);
         }
 
@@ -236,15 +236,15 @@ namespace IntegrationTests
             // This transfer seems to take longer so build in a delay
             await Task.Delay(500);
 
-            var getQuantifiableAssetResponse = await delegateClient2.GetQuantifiableAsset(accountA, gbpId);
+            var getQuantifiableAssetResponse = await TestHelper.CallAndRetry(() =>delegateClient2.GetQuantifiableAsset(accountA, gbpId));
             Assert.AreEqual("7", getQuantifiableAssetResponse.Value.Quantity);
 
-            getQuantifiableAssetResponse = await delegateClient2.GetQuantifiableAsset(accountB, gbpId);
+            getQuantifiableAssetResponse = await TestHelper.CallAndRetry(() =>delegateClient2.GetQuantifiableAsset(accountB, gbpId));
             Assert.AreEqual("3", getQuantifiableAssetResponse.Value.Quantity);
 
-            var response = await delegateClient2.GetTransactions(gbpId, accountA);
+            var response = await TestHelper.CallAndRetry(() =>delegateClient2.GetTransactions(gbpId, accountA));
             CheckTransactionResponse(response);
-            response = await delegateClient2.GetTransactions(gbpId, accountB);
+            response = await TestHelper.CallAndRetry(() =>delegateClient2.GetTransactions(gbpId, accountB));
             CheckTransactionResponse(response);
         }
 

@@ -36,7 +36,7 @@ namespace IntegrationTests
             
             var __ = await test.Client.AddDelegate(delegateId);
             
-            var response = await test.Client.GetIdentityDelegates(test.Identity.Id);
+            var response = await TestHelper.CallAndRetry(() => test.Client.GetIdentityDelegates(test.Identity.Id));
             
             Assert.IsTrue(response.Success);
             Assert.AreEqual(1, response.Value.Delegates.Length);
@@ -62,7 +62,7 @@ namespace IntegrationTests
             
             Assert.IsTrue(newUniqueAssetTypeResponse.Success);
             
-            var proofResponse = await delegateClient.GetProof(newUniqueAssetTypeResponse.Value.RequestId);
+            var proofResponse = await TestHelper.CallAndRetry(() => delegateClient.GetProof(newUniqueAssetTypeResponse.Value.RequestId));
             
             Assert.IsTrue(proofResponse.Success);
             var match = proofResponse.Value.Signatories.FirstOrDefault(x => x.DelegateIdentity != null);
@@ -107,7 +107,7 @@ namespace IntegrationTests
             
             Assert.IsTrue(newUniqueAssetTypeResponse.Success);
             
-            var proofResponse = await delegateClient.GetProof(newUniqueAssetTypeResponse.Value.RequestId);
+            var proofResponse = await TestHelper.CallAndRetry(() => delegateClient.GetProof(newUniqueAssetTypeResponse.Value.RequestId));
             
             Assert.IsTrue(proofResponse.Success);
             
@@ -122,7 +122,7 @@ namespace IntegrationTests
             var newUniqueAssetTypeCowResponse = await delegateClient.CreateUniqueAssetType(cowId);
             
             Assert.IsTrue(newUniqueAssetTypeCowResponse.Success);
-            var proofResponseNonDelegate = await delegateClient.GetProof(newUniqueAssetTypeCowResponse.Value.RequestId);
+            var proofResponseNonDelegate = await TestHelper.CallAndRetry(() => delegateClient.GetProof(newUniqueAssetTypeCowResponse.Value.RequestId));
             
             Assert.IsTrue(proofResponseNonDelegate.Success);
             var noMatch = proofResponseNonDelegate.Value.Signatories.FirstOrDefault(x => x.DelegateIdentity != null);

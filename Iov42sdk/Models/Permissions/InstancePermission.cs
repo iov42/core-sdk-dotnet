@@ -10,7 +10,7 @@ namespace Iov42sdk.Models.Permissions
 
         public void SetIdentity(string identityId, bool grant)
         {
-            this[identityId] = GrantOrDeny.Access(grant);
+            this[Identity(identityId)] = GrantOrDeny.Access(grant);
         }
 
         public void SetEveryone(bool grant)
@@ -26,6 +26,11 @@ namespace Iov42sdk.Models.Permissions
         public void SetInstanceOwner(bool grant)
         {
             this[InstanceOwner] = GrantOrDeny.Access(grant);
+        }
+
+        public static string Identity(string identityId)
+        {
+            return $"Identity({identityId})";
         }
     }
 }

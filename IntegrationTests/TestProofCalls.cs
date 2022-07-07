@@ -30,7 +30,7 @@ namespace IntegrationTests
             var issueIdentityResponse = await _test.Client.CreateIdentity(newId);
 
             var proofId = issueIdentityResponse.Value.RequestId;
-            var proofResponse = await _test.Client.GetProof(proofId);
+            var proofResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetProof(proofId));
             
             Assert.IsTrue(proofResponse.Success);
             Assert.IsNotNull(proofResponse.Value);

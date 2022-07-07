@@ -37,7 +37,7 @@ namespace IntegrationTests
             var horseId = _test.CreateUniqueId("horse");
             await _test.Client.CreateUniqueAssetType(horseId);
 
-            var getAssetTypeResponse = await _test.Client.GetUniqueAssetType(horseId);
+            var getAssetTypeResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetUniqueAssetType(horseId));
 
             Assert.IsTrue(getAssetTypeResponse.Success);
             Assert.AreEqual(horseId, getAssetTypeResponse.Value.AssetTypeId);
@@ -66,7 +66,7 @@ namespace IntegrationTests
             var trevorId = _test.CreateUniqueId("trevor");
             await _test.Client.CreateUniqueAsset(trevorId, horseId);
             
-            var getUniqueAssetResponse = await _test.Client.GetUniqueAsset(trevorId, horseId);
+            var getUniqueAssetResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetUniqueAsset(trevorId, horseId));
             
             Assert.IsTrue(getUniqueAssetResponse.Success);
             Assert.AreEqual(getUniqueAssetResponse.Value.AssetId, trevorId);

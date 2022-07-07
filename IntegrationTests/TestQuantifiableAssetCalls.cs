@@ -44,7 +44,7 @@ namespace IntegrationTests
             var gbpId = _test.CreateUniqueId("GBP");
             await _test.Client.CreateQuantifiableAssetType(gbpId, 2);
             
-            var getAssetTypeResponse = await _test.Client.GetQuantifiableAssetType(gbpId);
+            var getAssetTypeResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetQuantifiableAssetType(gbpId));
             
             Assert.IsTrue(getAssetTypeResponse.Success);
             Assert.AreEqual(gbpId, getAssetTypeResponse.Value.AssetTypeId);
@@ -80,7 +80,7 @@ namespace IntegrationTests
             var account = _test.CreateUniqueId("AccountGBP");
             await _test.Client.CreateQuantifiableAccount(account, gbpId, 1000);
             
-            var getQuantifiableAssetResponse = await _test.Client.GetQuantifiableAsset(account, gbpId);
+            var getQuantifiableAssetResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetQuantifiableAsset(account, gbpId));
             
             Assert.IsTrue(getQuantifiableAssetResponse.Success);
             Assert.AreEqual(getQuantifiableAssetResponse.Value.Quantity, "1000");
@@ -108,7 +108,7 @@ namespace IntegrationTests
             Assert.IsNull(result.Value.Errors);
             Assert.AreEqual(1, result.Value.Resources.Length);
             
-            var getQuantifiableAssetResponse = await _test.Client.GetQuantifiableAsset(account, gbpId);
+            var getQuantifiableAssetResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetQuantifiableAsset(account, gbpId));
             
             Assert.AreEqual(getQuantifiableAssetResponse.Value.Quantity, "1050");
             Assert.AreEqual(getQuantifiableAssetResponse.Value.AssetId, account);
@@ -154,7 +154,7 @@ namespace IntegrationTests
             var result = await _test.Client.Write(request);
             result.VerifyWriteResult();
             
-            var getQuantifiableAssetResponse = await _test.Client.GetQuantifiableAsset(account, gbpId);
+            var getQuantifiableAssetResponse = await TestHelper.CallAndRetry(() =>_test.Client.GetQuantifiableAsset(account, gbpId));
             
             Assert.AreEqual(getQuantifiableAssetResponse.Value.Quantity, "1050");
             Assert.AreEqual(getQuantifiableAssetResponse.Value.AssetId, account);

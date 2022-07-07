@@ -1,4 +1,5 @@
-﻿using Iov42sdk.Models.Permissions;
+﻿using IntegrationTests.Support;
+using Iov42sdk.Models.Permissions;
 using Iov42sdk.Support.Permissions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,10 +11,9 @@ namespace IntegrationTests.Permissions
         [TestMethod]
         public void ShouldCreateAllNullFields()
         {
-            var permissions = new PermissionBuilder()
-                .CreateIdentityPermissions()
+            var permissions = new CreateIdentityPermissionBuilder()
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
+            TestHelper.AllNull(permissions.CreateClaim, permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
         }
 
         [TestMethod]
@@ -23,8 +23,8 @@ namespace IntegrationTests.Permissions
                 .WithCreateClaimForEveryone(false)
                 .WithCreateClaimForIdentity("123", true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
-            PermissionTestHelper.CheckInstance(permissions.CreateClaim, 2, new[] { "123" }, new[] { InstancePermission.Everyone });
+            TestHelper.AllNull(permissions.EndorseClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
+            PermissionTestHelper.CheckInstance(permissions.CreateClaim, 2, new[] { InstancePermission.Identity("123") }, new[] { InstancePermission.Everyone });
         }
 
         [TestMethod]
@@ -34,8 +34,8 @@ namespace IntegrationTests.Permissions
                 .WithEndorseClaimForEveryone(true)
                 .WithEndorseClaimForIdentity("123", false)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
-            PermissionTestHelper.CheckInstance(permissions.EndorseClaim, 2, new[] { InstancePermission.Everyone }, new[] { "123" });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.ReadClaim, permissions.CreateIdentity);
+            PermissionTestHelper.CheckInstance(permissions.EndorseClaim, 2, new[] { InstancePermission.Everyone }, new[] { InstancePermission.Identity("123") });
         }
 
         [TestMethod]
@@ -45,8 +45,8 @@ namespace IntegrationTests.Permissions
                 .WithReadClaimForEveryone(true)
                 .WithReadClaimForIdentity("123", false)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.EndorseClaim, permissions.CreateIdentity);
-            PermissionTestHelper.CheckInstance(permissions.ReadClaim, 2, new[] { InstancePermission.Everyone }, new[] { "123" });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadEndorsement, permissions.EndorseClaim, permissions.CreateIdentity);
+            PermissionTestHelper.CheckInstance(permissions.ReadClaim, 2, new[] { InstancePermission.Everyone }, new[] { InstancePermission.Identity("123") });
         }
 
         [TestMethod]
@@ -56,8 +56,8 @@ namespace IntegrationTests.Permissions
                 .WithReadEndorsementForEveryone(false)
                 .WithReadEndorsementForIdentity("123", true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.CreateIdentity);
-            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 2, new[] { "123" }, new[] { InstancePermission.Everyone });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.CreateIdentity);
+            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 2, new[] { InstancePermission.Identity("123") }, new[] { InstancePermission.Everyone });
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace IntegrationTests.Permissions
             var permissions = new CreateIdentityPermissionBuilder()
                 .WithCreateIdentity(true)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.ReadEndorsement);
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.ReadEndorsement);
             Assert.AreEqual(GrantOrDeny.Grant, permissions.CreateIdentity);
         }
 
@@ -76,7 +76,7 @@ namespace IntegrationTests.Permissions
             var permissions = new CreateIdentityPermissionBuilder()
                 .WithCreateIdentity(false)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.ReadEndorsement);
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.ReadEndorsement);
             Assert.AreEqual(GrantOrDeny.Deny, permissions.CreateIdentity);
         }
 
@@ -88,8 +88,8 @@ namespace IntegrationTests.Permissions
                 .WithReadEndorsementForIdentity("123", true)
                 .WithReadEndorsementForIdentity("456", false)
                 .Build();
-            PermissionTestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.CreateIdentity);
-            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 3, new[] { "123" }, new[] { InstancePermission.Everyone, "456" });
+            TestHelper.AllNull(permissions.CreateClaim, permissions.ReadClaim, permissions.EndorseClaim, permissions.CreateIdentity);
+            PermissionTestHelper.CheckInstance(permissions.ReadEndorsement, 3, new[] { InstancePermission.Identity("123") }, new[] { InstancePermission.Everyone, InstancePermission.Identity("456") });
         }
 
     }

@@ -18,7 +18,7 @@ namespace IntegrationTests
         public static void Initialize(TestContext context)
         {
             // Run one set of tests with RSA encryption to check it works
-            _test = new IntegrationTestCreation(() => new RsaCryptoEngine());
+            _test = new IntegrationTestCreation(TestEnvironment.DefaultClientSettings, () => new RsaCryptoEngine());
         }
 
         [ClassCleanup]
@@ -43,7 +43,7 @@ namespace IntegrationTests
         [TestMethod]
         public async Task ShouldGetIdentity()
         {
-            var getIdentityResponse = await _test.Client.GetIdentity(_test.Identity.Id);
+            var getIdentityResponse = await TestHelper.CallAndRetry(() => _test.Client.GetIdentity(_test.Identity.Id));
             
             Assert.IsTrue(getIdentityResponse.Success);
             Assert.IsNotNull(getIdentityResponse.Value.IdentityId);
@@ -54,7 +54,7 @@ namespace IntegrationTests
         [TestMethod]
         public async Task ShouldGetIdentityPublicKey()
         {
-            var getPublicKeyResponse = await _test.Client.GetIdentityPublicKey(_test.Identity.Id);
+            var getPublicKeyResponse = await TestHelper.CallAndRetry(() => _test.Client.GetIdentityPublicKey(_test.Identity.Id));
             
             Assert.IsTrue(getPublicKeyResponse.Success);
             Assert.IsNotNull(getPublicKeyResponse.Value.Key);
@@ -66,7 +66,7 @@ namespace IntegrationTests
         public async Task ShouldGetIdentityPublicKeyByAnotherIdentity()
         {
             var other = new IntegrationTestCreation();
-            var getPublicKeyResponse = await other.Client.GetIdentityPublicKey(_test.Identity.Id);
+            var getPublicKeyResponse = await TestHelper.CallAndRetry(() => other.Client.GetIdentityPublicKey(_test.Identity.Id));
             
             Assert.IsTrue(getPublicKeyResponse.Success);
             Assert.IsNotNull(getPublicKeyResponse.Value.Key);
@@ -148,7 +148,5 @@ namespace IntegrationTests
             var issueIdentityResponse = await _test.Client.Write(request);
             issueIdentityResponse.VerifyWriteResult();
         }
-
-        // TODO: Add permission tests
     }
 }

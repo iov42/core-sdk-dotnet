@@ -163,6 +163,14 @@ namespace Iov42sdk.Connection
         Task<ResponseResult<QuantifiableAssetResult>> GetQuantifiableAsset(string address, string assetTypeAddress);
 
         /// <summary>
+        /// Create the claims on the identity passed in
+        /// </summary>
+        /// <param name="identity">The identity to apply the claims to</param>
+        /// <param name="claims">The claims in plaintext</param>
+        /// <returns></returns>
+        Task<ResponseResult<WriteResult>> CreateIdentityClaimsOnIdentity(string identity, params string[] claims);
+        
+        /// <summary>
         /// Create the claims on the identity
         /// </summary>
         /// <param name="claims">The claims in plaintext</param>
