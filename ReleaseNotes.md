@@ -1,3 +1,14 @@
+# Version 1.0.0.9
+7th July 2022
+
+- Added permissions to the callas
+- Tests for permission calls
+- Added missing call for setting claims on a different identity
+- Retry handler in tests for GET calls
+- Exposed consistency delay as a setting
+- Fix for identity in permission calls
+- Updated packages including NewtonSoft.json vulnerability
+
 # Version 1.0.0.8
 4th July 2022
 
