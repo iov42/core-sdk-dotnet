@@ -100,6 +100,21 @@ var issueIdentityResponse = await client.CreateIdentity(newIdentity);
 ```
 This will create a new identity on the platform using the identifier and keypair in newIdentity. If you wanted to switch to using this identity for calls to the platform you would need to create a new client passing this identity.
 
+### Identity permissions
+
+When creating an identity it is possible to define what they are allowed to do. This uses a "CreateIdentityPermissionBuilder" to build up the permissions to apply which can then be added to the create identity request. To create a new identity where only Alice can create claims against it, we disable claims for everyone and then only allow create claims for Alice.
+
+``` csharp
+var permissions = new CreateIdentityPermissionBuilder()
+                .WithCreateClaimForEveryone(false)
+                .WithCreateClaimForIdentity("Alice", true)
+                .Build();
+var restrictedIdentity = identityBuilder.Create();
+var restrictedIdentityResponse = await client.CreateIdentity(restrictedIdentity, permissions);
+
+```
+There are a lot of different permissions that can be set when creating a new identity (see the tests for examples of usage).
+
 ### Create an asset type
 
 There are two main types of asset on the platform - unique and quantifiable.
@@ -119,6 +134,38 @@ var numberOfDecimalPlaces = 2;
 var newQuantifiableAssetTypeResponse = await client.CreateQuantifiableAssetType(eGbpId, numberOfDecimalPlaces);
 ```
 The scale is the number of decimal places to support.
+
+### Asset type permissions
+
+Similar to creating an identity it is possible to define what actions can be performed by which identities. This uses a "CreateUniqueAssetTypePermissionBuilder" or "CreateQuantifiableAssetTypePermissionBuilder" to build up the permissions to apply which can then be added to the create asset type request. To only allow the type owner or alice to read the details about the asset type, we disable reads for everyone and grant them for alice and the type owner.
+
+
+``` csharp
+var permissions = new CreateUniqueAssetTypePermissionBuilder()
+                .WithReadForEveryone(false)
+                .WithReadForIdentity("alice", true)
+                .WithReadForTypeOwner(true)
+                .Build();
+var newUniqueAssetTypeResponse = await client.CreateUniqueAssetType(horseId, permissions);
+
+```
+As well as defining what can happen to the asset type we can also define what can be performed on individual instances of the asset type. Here we will only allow alice or the type owner to transfer the new asset - the actual owner is no longer allowed.
+
+``` csharp
+var instances = new CreateQuantifiableAssetTypeInstancesPermissionsBuilder()
+                .WithInstanceTransferForEveryone(false)
+                .WithInstanceTransferForIdentity("alice", true)
+                .WithInstanceTransferForTypeOwner(true)
+                .WithInstanceTransferForInstanceOwner(false)
+                .BuildInstances();
+var permissions = new CreateUniqueAssetTypePermissionBuilder()
+                .WithInstancePermission(instances)
+                .Build();
+var newUniqueAssetTypeResponse = await client.CreateUniqueAssetType(horseId, permissions);
+
+```
+
+There are a lot of different permissions that can be set when creating a new asset type (see the tests for examples of usage).
 
 ### Creating Assets
 
